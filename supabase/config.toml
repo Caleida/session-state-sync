@@ -1,1 +1,7 @@
 project_id = "uoskbpqmlvgrwoqosnew"
+
+[functions.search-availability]
+verify_jwt = false
+
+[functions.confirm-appointment]
+verify_jwt = false
