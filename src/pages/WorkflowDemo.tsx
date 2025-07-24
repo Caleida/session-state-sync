@@ -103,6 +103,7 @@ const WorkflowDemo = () => {
             {sessionId && (
               <WorkflowSimulator sessionId={sessionId} email={email} />
             )}
+            <div dangerouslySetInnerHTML={{ __html: '<elevenlabs-convai agent-id="agent_4401k0y50vsbenbrp3h7qr32ghxq"></elevenlabs-convai>' }} />
           </div>
         </div>
       </div>
