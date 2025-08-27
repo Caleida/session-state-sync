@@ -104,3 +104,19 @@ This file tracks the project's current status, including recent changes, current
 - This addresses the real business logic: one workflow per (session_id, email) combination
 - Resolves both PGRST116 error and duplicate key constraint violation
 - Solution is architecturally sound and performance-optimized
+
+[2025-08-27 18:29:00] - Completed implementation of automatic call termination detection for ElevenLabs integration
+- Created supabase/functions/end-call/index.ts Edge Function following existing patterns
+- Function receives session_id, email, call_duration, termination_reason from agent tool
+- Updates workflow to 'call_ended' state with detailed termination metadata
+- Comprehensive agent configuration guide provided in ELEVENLABS_AGENT_CONFIGURATION.md
+- Agent tool uses dynamic variables {{session_id}} and {{email}} from widget
+- Solution addresses critical gap where workflow never reached final 'call_ended' state
+- Ready for deployment and testing with ElevenLabs agent configuration
+[2025-08-27 20:48:45] - Updated ElevenLabs webhook tool JSON configuration format
+- Fixed JSON configuration in ELEVENLABS_AGENT_CONFIGURATION.md to match actual ElevenLabs interface
+- Changed from generic tool schema to proper ElevenLabs webhook format with api_schema structure
+- Added correct request_body_schema, request_headers, and dynamic_variables configuration
+- Maintained all required parameters: session_id, email, call_duration, termination_reason, call_summary
+- Ensured proper dynamic variable mapping for {{session_id}} and {{email}}
+- Configuration now matches what users see in ElevenLabs interface

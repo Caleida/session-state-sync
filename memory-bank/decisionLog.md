@@ -127,3 +127,30 @@ This file records architectural and implementation decisions using a list format
 - Frontend code reverted from temporary workarounds to optimal implementation
 
 [2025-08-27 17:11:00] - Database schema enhancement completed successfully
+
+---
+
+## Decision
+
+**Agent-Based Call Termination Detection for ElevenLabs Integration**
+- Implemented automatic call termination detection using ElevenLabs agent tools
+- Created `end-call` Edge Function to handle workflow state transitions
+- Agent calls tool when conversation concludes naturally
+
+## Rationale
+
+- ElevenLabs post-call webhooks do NOT include dynamic variables (session_id, email)
+- Widget DOM monitoring would be unreliable and hacky
+- React SDK integration would require major refactoring and defeat the purpose of using the simple widget
+- Agent-based approach provides reliable, controlled termination detection
+- Maintains consistency with existing Edge Function architecture
+
+## Implementation Details
+
+- Created `supabase/functions/end-call/index.ts` following same pattern as existing functions
+- Edge Function receives session_id, email, call_duration, termination_reason, call_summary
+- Updates workflows table with current_step: 'call_ended' and termination metadata
+- Agent configured with `end_call` tool that accesses dynamic variables
+- Tool called automatically when conversation concludes naturally
+
+[2025-08-27 18:29:00] - Agent-based call termination detection implemented successfully
