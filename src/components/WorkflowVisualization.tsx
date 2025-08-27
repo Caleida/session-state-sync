@@ -102,15 +102,26 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
 
     // Load initial state
     const loadInitialState = async () => {
-      const { data } = await supabase
-        .from('workflows')
-        .select('current_step, step_data')
-        .eq('session_id', sessionId)
-        .single();
-      
-      if (data && data.current_step) {
-        setCurrentStep(data.current_step);
-        setStepData(data.step_data || {});
+      try {
+        const { data, error } = await supabase
+          .from('workflows')
+          .select('current_step, step_data')
+          .eq('session_id', sessionId)
+          .maybeSingle();
+        
+        if (error) {
+          console.error('Error loading workflow state:', error);
+          return;
+        }
+        
+        if (data && data.current_step) {
+          setCurrentStep(data.current_step);
+          setStepData(data.step_data || {});
+        }
+        // If data is null (no workflow record exists yet), we keep the default state:
+        // currentStep='waiting' and stepData={}
+      } catch (error) {
+        console.error('Unexpected error loading workflow state:', error);
       }
     };
 
