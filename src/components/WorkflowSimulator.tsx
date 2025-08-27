@@ -22,6 +22,8 @@ export const WorkflowSimulator: React.FC<WorkflowSimulatorProps> = ({ sessionId,
           email,
           current_step: step,
           step_data: data
+        }, {
+          onConflict: 'session_id,email'
         });
 
       if (error) throw error;
@@ -57,7 +59,7 @@ export const WorkflowSimulator: React.FC<WorkflowSimulatorProps> = ({ sessionId,
       id: 'showing_availability',
       name: 'Mostrar Opciones',
       icon: <Calendar className="w-4 h-4" />,
-      data: { 
+      data: {
         message: 'Opciones disponibles: 25/07 10:00, 26/07 15:30, 27/07 09:15',
         available_slots: ['2024-07-25T10:00:00', '2024-07-26T15:30:00', '2024-07-27T09:15:00']
       }
@@ -66,7 +68,7 @@ export const WorkflowSimulator: React.FC<WorkflowSimulatorProps> = ({ sessionId,
       id: 'confirming_appointment',
       name: 'Confirmar Cita',
       icon: <CheckCircle className="w-4 h-4" />,
-      data: { 
+      data: {
         message: 'Enviando confirmación a BEYOND Citas...',
         selected_slot: '2024-07-25T10:00:00'
       }
@@ -75,7 +77,7 @@ export const WorkflowSimulator: React.FC<WorkflowSimulatorProps> = ({ sessionId,
       id: 'appointment_confirmed',
       name: 'Cita Confirmada',
       icon: <CheckCircle className="w-4 h-4" />,
-      data: { 
+      data: {
         message: 'Cita confirmada para el 25/07/2024 a las 10:00',
         appointment_id: 'APT-12345'
       }
@@ -114,10 +116,10 @@ export const WorkflowSimulator: React.FC<WorkflowSimulatorProps> = ({ sessionId,
             </Button>
           ))}
         </div>
-        
+
         <div className="pt-4 border-t">
-          <Button 
-            variant="destructive" 
+          <Button
+            variant="destructive"
             onClick={resetWorkflow}
             className="w-full"
           >

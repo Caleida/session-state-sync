@@ -100,3 +100,30 @@ This file records architectural and implementation decisions using a list format
 - Since implementation uses direct HTML widget via dangerouslySetInnerHTML, React SDK is redundant
 - Reduces bundle size and simplifies dependency management
 - Maintains clean, lightweight integration approach
+
+---
+
+## Decision
+
+**Database Schema Enhancement: UNIQUE Constraint on session_id**
+- Added UNIQUE constraint on session_id column in workflows table
+- Migration 20250827165300_add_unique_session_id_constraint.sql created and applied
+- Prevents duplicate workflow records for same session
+
+## Rationale
+
+- Root cause analysis revealed PGRST116 error was caused by multiple workflow records with same session_id
+- Supabase .upsert() operations only update records on PRIMARY KEY or UNIQUE constraint conflicts
+- Without UNIQUE constraint, .upsert() was creating duplicates instead of updating existing records
+- .maybeSingle() queries failed when encountering multiple rows for same session_id
+- Database integrity required enforcing one-to-one relationship between sessions and workflow records
+
+## Implementation Details
+
+- Migration removes existing duplicate records using SQL deletion with row numbering
+- UNIQUE constraint `unique_session_id` added to prevent future duplicates  
+- .upsert() operations now correctly update existing workflow records instead of creating new ones
+- All PostgREST queries expecting single results (.maybeSingle()) now work reliably
+- Frontend code reverted from temporary workarounds to optimal implementation
+
+[2025-08-27 17:11:00] - Database schema enhancement completed successfully

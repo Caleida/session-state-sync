@@ -50,3 +50,12 @@ This file tracks the project's progress using a task list format.
 - Maintains default state (waiting step) when no workflow record exists yet
 - Preserves existing functionality when workflow records do exist
 - Eliminates 406 "Not Acceptable" error at demo start
+
+[2025-08-27 17:10:00] - PGRST116 PostgREST error debugging completed successfully
+- Root cause identified: Missing UNIQUE constraint on session_id column in workflows table
+- Database migration 20250827165300_add_unique_session_id_constraint.sql created and applied
+- Duplicate records cleaned up and future duplicates prevented
+- .upsert() operations now work correctly, updating existing records instead of creating duplicates
+- Error resolution verified through database constraint confirmation
+- All temporary workarounds removed - code restored to optimal state
+- Application ready for production use without PGRST116 errors

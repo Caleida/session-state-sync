@@ -82,9 +82,12 @@ serve(async (req) => {
       .from('workflows')
       .upsert({
         session_id: session_id,
+        email: email,
         current_step: 'appointment_confirmed',
         step_data: stepData,
         updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'session_id,email'
       });
 
     if (updateError) {
@@ -110,9 +113,9 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in confirm-appointment function:', error);
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       message: 'Error al confirmar la cita. Por favor intenta nuevamente.'
     }), {
       status: 500,

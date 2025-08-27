@@ -78,9 +78,12 @@ serve(async (req) => {
       .from('workflows')
       .upsert({
         session_id: session_id,
+        email: email,
         current_step: 'showing_availability',
         step_data: stepData,
         updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'session_id,email'
       });
 
     if (updateError) {
@@ -105,9 +108,9 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in search-availability function:', error);
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       success: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       message: 'Error al buscar disponibilidad'
     }), {
       status: 500,

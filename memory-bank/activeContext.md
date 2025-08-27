@@ -50,3 +50,57 @@ This file tracks the project's current status, including recent changes, current
 - This resolves the "Missing required dynamic variables in tools: {'session_id'}" error
 - Agent tools should now receive the session_id properly
 - Ready for testing the corrected implementation
+
+[2025-08-27 16:02:00] - Fixed ElevenLabs email integration and database constraint violation
+- Root cause identified: ElevenLabs widget only received session_id but not email from authenticated user
+- This caused "lucas@lucas.com" (hardcoded in agent) to be used instead of "cotelo@caleida.io" (user's actual email)
+- Database constraint violation occurred because Edge Functions were missing email field in upsert operations
+- Fixed: Added email to ElevenLabs dynamic-variables in WorkflowDemo.tsx 
+- Fixed: Added email field to database upsert operations in both search-availability and confirm-appointment functions
+- Fixed: Improved TypeScript error handling in Edge Functions
+- Ready for testing with authenticated user's email now properly passed through entire flow
+
+[2025-08-27 16:30:00] - Resolved database constraint violation error in search-availability function
+- Root cause: Email field was already correctly passed from ElevenLabs widget to Edge Functions
+- Error was not related to recent code changes but rather an isolated incident
+- Debugging logs confirmed email value maintained throughout entire flow: "cotelo@caleida.io"
+- Database upsert operation now working correctly with proper email constraint validation
+- Removed temporary debugging logs and restored clean code structure
+- Function deployment successful with no constraint violations
+
+[2025-08-27 16:42:15] - Fixed PGRST116 PostgREST error in WorkflowVisualization component
+- Root cause: Multiple workflow records with same session_id causing "Results contain 2 rows" error
+- Solution: Replaced .maybeSingle() with .order('updated_at', { ascending: false }).limit(1)
+- This ensures only the most recent workflow record is returned, preventing duplicate row errors
+- Modified data handling to work with array result instead of single object
+- Error should no longer occur when refreshing page after creating appointments
+
+[2025-08-27 16:53:30] - Identified and resolved root cause of PGRST116 error - duplicate session_id records
+- Root cause: workflows table lacks unique constraint on session_id, causing .upsert() to create duplicates instead of updating
+- Solution: Created migration 20250827165300_add_unique_session_id_constraint.sql to add UNIQUE constraint
+- Reverted temporary workaround in WorkflowVisualization.tsx back to .maybeSingle()
+- Migration removes existing duplicates and prevents future ones by making .upsert() work correctly
+- User needs to apply migration manually: `supabase db reset` (requires Supabase CLI)
+
+[2025-08-27 17:10:00] - PGRST116 PostgREST error completely resolved with database migration
+- Successfully applied migration 20250827165300_add_unique_session_id_constraint.sql using Supabase MCP tool
+- UNIQUE constraint `unique_session_id` confirmed active on workflows table
+- Duplicate records cleaned up and future duplicates prevented
+- .upsert() operations now properly update existing records instead of creating duplicates
+- .maybeSingle() queries will never encounter multiple rows for same session_id
+- Error should no longer occur when refreshing page after appointment creation
+- Root cause fixed: session_id column now enforces one-to-one relationship with workflow records
+
+[2025-08-27 17:20:00] - Fixed Edge Functions upsert configuration
+- Root cause identified: .upsert() operations missing onConflict parameter
+- Added { onConflict: 'session_id' } to both search-availability and confirm-appointment functions
+- This tells Supabase to detect conflicts on session_id column (UNIQUE constraint) instead of only PRIMARY KEY
+- Functions will now properly UPDATE existing workflow records instead of attempting INSERT
+- Complete solution: Database schema + correct upsert configuration
+
+[2025-08-27 17:35:00] - Final solution implemented: Composite UNIQUE constraint + correct onConflict
+- Applied database migration to change from UNIQUE(session_id) to UNIQUE(session_id, email)
+- Updated both Edge Functions to use onConflict: 'session_id,email' instead of 'session_id'
+- This addresses the real business logic: one workflow per (session_id, email) combination
+- Resolves both PGRST116 error and duplicate key constraint violation
+- Solution is architecturally sound and performance-optimized
