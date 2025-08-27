@@ -80,12 +80,12 @@ serve(async (req) => {
 
     const { error: updateError } = await supabase
       .from('workflows')
-      .update({
+      .upsert({
+        session_id: session_id,
         current_step: 'appointment_confirmed',
         step_data: stepData,
         updated_at: new Date().toISOString()
-      })
-      .eq('session_id', session_id);
+      });
 
     if (updateError) {
       console.error('Error updating workflow:', updateError);
