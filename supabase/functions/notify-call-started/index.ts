@@ -10,6 +10,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.52.1';
  * Required Parameters:
  * - session_id: Unique identifier for the session
  * - workflow_type: Type of workflow ('booking', 'appointments', 'consultations', etc.)
+ * 
+ * Optional Parameters:
+ * - agent_id: ElevenLabs agent identifier
+ * - conversation_id: ElevenLabs conversation identifier
+ * - call_metadata: Additional metadata about the call
  */
 
 const corsHeaders = {
@@ -28,7 +33,10 @@ serve(async (req) => {
     
     const { 
       session_id, 
-      workflow_type
+      workflow_type,
+      agent_id,
+      conversation_id,
+      call_metadata
     } = await req.json();
     
     if (!session_id) {
@@ -41,6 +49,8 @@ serve(async (req) => {
     
     console.log('Request data:', { 
       session_id, 
+      agent_id,
+      conversation_id,
       workflow_type
     });
 
@@ -76,6 +86,9 @@ serve(async (req) => {
     // Create call start data
     const callStartData = {
       started_at: new Date().toISOString(),
+      agent_id: agent_id || null,
+      conversation_id: conversation_id || null,
+      call_metadata: call_metadata || null,
       call_initiated: true
     };
 
@@ -86,6 +99,8 @@ serve(async (req) => {
       call_initiation: callStartData,
       start_details: {
         message: 'Call started successfully',
+        agent_id: agent_id || 'Not specified',
+        conversation_id: conversation_id || 'Not specified',
         workflow_type: workflow_type,
         started_at: new Date().toISOString()
       }
@@ -119,6 +134,8 @@ serve(async (req) => {
       message: 'Call started and recorded successfully',
       session_id,
       workflow_type,
+      agent_id: agent_id || 'Not specified',
+      conversation_id: conversation_id || 'Not specified',
       next_step: 'call_started',
       timestamp: new Date().toISOString()
     };
