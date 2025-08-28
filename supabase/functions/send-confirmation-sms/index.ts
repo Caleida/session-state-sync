@@ -31,30 +31,6 @@ serve(async (req) => {
 
     console.log('Processing SMS confirmation for session:', session_id, 'to phone:', phone_number);
 
-    // Find the workflow
-    const { data: workflow, error: fetchError } = await supabase
-      .from('workflows')
-      .select('*')
-      .eq('session_id', session_id)
-      .eq('workflow_type', 'booking')
-      .maybeSingle();
-
-    if (fetchError) {
-      console.error('Error fetching workflow:', fetchError);
-      return new Response(
-        JSON.stringify({ error: 'Error fetching workflow' }), 
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (!workflow) {
-      console.error('Workflow not found for session:', session_id);
-      return new Response(
-        JSON.stringify({ error: 'Workflow not found' }), 
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     // Simulate SMS sending (no real SMS)
     const simulatedSMSData = {
       sms_confirmation: {
@@ -63,25 +39,26 @@ serve(async (req) => {
         message: `Su cita ha sido confirmada. SMS enviado a ${phone_number}`,
         status: 'sent',
         delivery_status: 'delivered'
-      },
-      // Keep existing step data
-      ...workflow.step_data
+      }
     };
 
-    // Update workflow to sms_confirmation_sent step
-    const { data: updatedWorkflow, error: updateError } = await supabase
+    // Update workflow using upsert pattern like other edge functions
+    const { data: workflow, error: upsertError } = await supabase
       .from('workflows')
-      .update({
+      .upsert({
+        session_id,
+        workflow_type: 'booking',
         current_step: 'sms_confirmation_sent',
         step_data: simulatedSMSData,
         updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'session_id,workflow_type'
       })
-      .eq('id', workflow.id)
       .select()
       .maybeSingle();
 
-    if (updateError) {
-      console.error('Error updating workflow:', updateError);
+    if (upsertError) {
+      console.error('Error updating workflow:', upsertError);
       return new Response(
         JSON.stringify({ error: 'Failed to update workflow' }), 
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -92,8 +69,8 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ 
-        success: true, 
-        message: 'SMS confirmation sent successfully',
+        success: true,
+        next_step: 'sms_confirmation_sent',
         sms_details: simulatedSMSData.sms_confirmation
       }), 
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
