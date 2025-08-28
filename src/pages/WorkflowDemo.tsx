@@ -15,7 +15,7 @@ const WorkflowDemo = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isStarted, setIsStarted] = useState(false);
   
-  const { config, agentId, loading: configLoading, error: configError } = useWorkflowConfig(workflowType || 'appointments');
+  const { config, agentId, loading: configLoading, error: configError } = useWorkflowConfig(workflowType || 'booking');
 
   // Redirect if no workflowType
   useEffect(() => {

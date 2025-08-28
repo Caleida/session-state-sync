@@ -42,7 +42,7 @@ const Index = () => {
 
   const getWorkflowIcon = (workflowType: string) => {
     switch (workflowType) {
-      case 'appointments':
+      case 'booking':
         return <Calendar className="w-8 h-8" />;
       default:
         return <Settings className="w-8 h-8" />;
