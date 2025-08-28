@@ -14,7 +14,7 @@ interface WorkflowSimulatorProps {
 
 export const WorkflowSimulator: React.FC<WorkflowSimulatorProps> = ({ sessionId, email, workflowType }) => {
   const { toast } = useToast();
-  const { config, loading, error } = useWorkflowConfig(workflowType);
+  const { config, agentId, loading, error } = useWorkflowConfig(workflowType);
 
   const updateWorkflowStep = async (step: string, data: any = {}) => {
     try {

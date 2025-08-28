@@ -14,7 +14,7 @@ interface WorkflowVisualizationProps {
 export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ sessionId, email, workflowType }) => {
   const [currentStep, setCurrentStep] = useState<string>('waiting');
   const [stepData, setStepData] = useState<any>({});
-  const { config, loading, error } = useWorkflowConfig(workflowType);
+  const { config, agentId, loading, error } = useWorkflowConfig(workflowType);
 
   useEffect(() => {
     // Subscribe to realtime changes

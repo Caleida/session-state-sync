@@ -23,6 +23,13 @@ interface WorkflowConfig {
   simulateSteps: SimulateStep[];
 }
 
+interface WorkflowConfigReturn {
+  config: WorkflowConfig | null;
+  agentId: string | null;
+  loading: boolean;
+  error: string | null;
+}
+
 // Mapping de strings de iconos a componentes React
 const iconMap: Record<string, React.ReactNode> = {
   'phone': <Phone className="w-6 h-6" />,
@@ -37,8 +44,9 @@ const iconMap: Record<string, React.ReactNode> = {
   'x-circle-small': <XCircle className="w-4 h-4" />
 };
 
-export const useWorkflowConfig = (workflowType: string) => {
+export const useWorkflowConfig = (workflowType: string): WorkflowConfigReturn => {
   const [config, setConfig] = useState<WorkflowConfig | null>(null);
+  const [agentId, setAgentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,79 +56,45 @@ export const useWorkflowConfig = (workflowType: string) => {
         setLoading(true);
         setError(null);
 
-        // For now, return hardcoded config since RPC function doesn't exist yet
-        const defaultConfig = {
-          workflow_steps: {
-            waiting: {
-              id: 'waiting',
-              name: 'Esperando llamada',
-              description: 'El usuario está esperando a que inicie la conversación',
-              iconName: 'phone',
-              actor: 'user'
-            },
-            searching: {
-              id: 'searching',
-              name: 'Buscando disponibilidad',
-              description: 'BEYOND está buscando citas disponibles',
-              iconName: 'search',
-              actor: 'beyond'
-            },
-            confirming: {
-              id: 'confirming',
-              name: 'Confirmando cita',
-              description: 'BEYOND está confirmando los detalles de la cita',
-              iconName: 'calendar',
-              actor: 'beyond'
-            },
-            confirmed: {
-              id: 'confirmed',
-              name: 'Cita confirmada',
-              description: 'La cita ha sido confirmada exitosamente',
-              iconName: 'check-circle',
-              actor: 'beyond'
-            },
-            cancelled: {
-              id: 'cancelled',
-              name: 'Cita cancelada',
-              description: 'La cita ha sido cancelada',
-              iconName: 'x-circle',
-              actor: 'beyond'
-            }
-          },
-          step_order: ['waiting', 'searching', 'confirming', 'confirmed'],
-          simulate_steps: [
-            { id: 'searching', name: 'Buscar', iconName: 'search-small', data: { message: 'Buscando disponibilidad...' } },
-            { id: 'confirming', name: 'Confirmar', iconName: 'calendar-small', data: { message: 'Confirmando cita...' } },
-            { id: 'confirmed', name: 'Completar', iconName: 'check-circle-small', data: { message: 'Cita confirmada!' } },
-            { id: 'cancelled', name: 'Cancelar', iconName: 'x-circle-small', data: { message: 'Cita cancelada' } }
-          ]
-        };
+        // Load workflow configuration from database
+        const { data, error: dbError } = await supabase
+          .from('workflow_definitions')
+          .select('*')
+          .eq('workflow_type', workflowType)
+          .single();
 
-        const data = defaultConfig;
+        if (dbError) {
+          throw new Error(`Error cargando configuración: ${dbError.message}`);
+        }
 
         if (!data) {
           throw new Error(`Configuración de workflow '${workflowType}' no encontrada`);
         }
 
-        // Mapear iconos de strings a componentes React
+        // Extract configuration from database
+        const stepsConfig = data.steps_config as any;
+        
+        // Map icons from strings to components React
         const workflowSteps: Record<string, WorkflowStep> = {};
-        Object.entries(data.workflow_steps as any).forEach(([key, step]: [string, any]) => {
+        Object.entries(stepsConfig.workflow_steps as any).forEach(([key, step]: [string, any]) => {
           workflowSteps[key] = {
             ...step,
             icon: iconMap[step.iconName] || <Clock className="w-6 h-6" />
           };
         });
 
-        const simulateSteps: SimulateStep[] = (data.simulate_steps as any[]).map((step: any) => ({
+        const simulateSteps: SimulateStep[] = (stepsConfig.simulate_steps as any[]).map((step: any) => ({
           ...step,
           icon: iconMap[step.iconName] || <Clock className="w-4 h-4" />
         }));
 
         setConfig({
           workflowSteps,
-          stepOrder: data.step_order as string[],
+          stepOrder: stepsConfig.step_order as string[],
           simulateSteps
         });
+        
+        setAgentId(data.agent_id);
 
       } catch (err) {
         console.error('Error loading workflow config:', err);
@@ -135,5 +109,5 @@ export const useWorkflowConfig = (workflowType: string) => {
     }
   }, [workflowType]);
 
-  return { config, loading, error };
+  return { config, agentId, loading, error };
 };

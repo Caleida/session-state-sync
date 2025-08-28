@@ -1,48 +1,99 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { WorkflowVisualization } from '@/components/WorkflowVisualization';
 import { WorkflowSimulator } from '@/components/WorkflowSimulator';
-import { Mail, Play } from 'lucide-react';
+import { useWorkflowConfig } from '@/hooks/useWorkflowConfig';
+import { Mail, Play, ArrowLeft } from 'lucide-react';
 
 const WorkflowDemo = () => {
+  const { workflowType } = useParams<{ workflowType: string }>();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isStarted, setIsStarted] = useState(false);
+  
+  const { config, agentId, loading: configLoading, error: configError } = useWorkflowConfig(workflowType || 'appointments');
+
+  // Redirect if no workflowType
+  useEffect(() => {
+    if (!workflowType) {
+      navigate('/');
+      return;
+    }
+  }, [workflowType, navigate]);
 
   useEffect(() => {
+    if (!workflowType) return;
+    
     // Check localStorage for existing session
-    const storedSessionId = localStorage.getItem('workflow_session_id');
-    const storedEmail = localStorage.getItem('workflow_email');
+    const storageKey = `workflow_${workflowType}_session_id`;
+    const emailKey = `workflow_${workflowType}_email`;
+    
+    const storedSessionId = localStorage.getItem(storageKey);
+    const storedEmail = localStorage.getItem(emailKey);
     
     if (storedSessionId && storedEmail) {
       setSessionId(storedSessionId);
       setEmail(storedEmail);
       setIsStarted(true);
     }
-  }, []);
+  }, [workflowType]);
 
   const startWorkflow = () => {
-    if (!email.trim()) return;
+    if (!email.trim() || !workflowType) return;
     
     const newSessionId = crypto.randomUUID();
     
-    // Store in localStorage
-    localStorage.setItem('workflow_session_id', newSessionId);
-    localStorage.setItem('workflow_email', email);
+    // Store in localStorage with workflow-specific keys
+    const storageKey = `workflow_${workflowType}_session_id`;
+    const emailKey = `workflow_${workflowType}_email`;
+    
+    localStorage.setItem(storageKey, newSessionId);
+    localStorage.setItem(emailKey, email);
     
     setSessionId(newSessionId);
     setIsStarted(true);
   };
 
   const resetSession = () => {
-    localStorage.removeItem('workflow_session_id');
-    localStorage.removeItem('workflow_email');
+    if (!workflowType) return;
+    
+    const storageKey = `workflow_${workflowType}_session_id`;
+    const emailKey = `workflow_${workflowType}_email`;
+    
+    localStorage.removeItem(storageKey);
+    localStorage.removeItem(emailKey);
     setSessionId(null);
     setEmail('');
     setIsStarted(false);
   };
+
+  if (configLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p>Cargando configuración del workflow...</p>
+      </div>
+    );
+  }
+
+  if (configError || !config || !workflowType) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6 text-center space-y-4">
+            <p className="text-red-500">Error: {configError || 'Workflow no encontrado'}</p>
+            <Button onClick={() => navigate('/')} variant="outline">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Volver al Inicio
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!isStarted) {
     return (
@@ -51,7 +102,7 @@ const WorkflowDemo = () => {
           <CardHeader className="text-center">
             <CardTitle className="flex items-center justify-center space-x-2">
               <Mail className="w-6 h-6" />
-              <span>Demo Workflow de Citas</span>
+              <span>Demo Workflow: {config.workflowSteps[config.stepOrder[0]]?.name || workflowType}</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -68,14 +119,22 @@ const WorkflowDemo = () => {
                 onKeyPress={(e) => e.key === 'Enter' && startWorkflow()}
               />
             </div>
-            <Button 
-              onClick={startWorkflow}
-              disabled={!email.trim()}
-              className="w-full"
-            >
-              <Play className="w-4 h-4 mr-2" />
-              Iniciar Demo de Workflow
-            </Button>
+              <Button 
+                onClick={startWorkflow}
+                disabled={!email.trim()}
+                className="w-full"
+              >
+                <Play className="w-4 h-4 mr-2" />
+                Iniciar Demo de Workflow
+              </Button>
+              <Button 
+                onClick={() => navigate('/')}
+                variant="outline"
+                className="w-full"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Volver
+              </Button>
           </CardContent>
         </Card>
       </div>
@@ -86,29 +145,40 @@ const WorkflowDemo = () => {
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Demo Workflow de Gestión de Citas</h1>
-          <Button variant="outline" onClick={resetSession}>
-            Nueva Sesión
-          </Button>
+          <div>
+            <h1 className="text-3xl font-bold">Demo: {config.workflowSteps[config.stepOrder[0]]?.name || workflowType}</h1>
+            <p className="text-muted-foreground mt-1">Workflow Type: {workflowType}</p>
+          </div>
+          <div className="flex space-x-2">
+            <Button variant="outline" onClick={() => navigate('/')}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Volver
+            </Button>
+            <Button variant="outline" onClick={resetSession}>
+              Nueva Sesión
+            </Button>
+          </div>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             {sessionId && (
-              <WorkflowVisualization sessionId={sessionId} email={email} workflowType="appointments" />
+              <WorkflowVisualization sessionId={sessionId} email={email} workflowType={workflowType} />
             )}
           </div>
           
           <div className="space-y-4">
             {sessionId && (
-              <WorkflowSimulator sessionId={sessionId} email={email} workflowType="appointments" />
+              <WorkflowSimulator sessionId={sessionId} email={email} workflowType={workflowType} />
             )}
-            <div dangerouslySetInnerHTML={{
-              __html: `<elevenlabs-convai
-                         agent-id="agent_4401k0y50vsbenbrp3h7qr32ghxq"
-                         dynamic-variables='{"session_id": "${sessionId}", "email": "${email}"}'
-                       ></elevenlabs-convai>`
-            }} />
+            {agentId && (
+              <div dangerouslySetInnerHTML={{
+                __html: `<elevenlabs-convai
+                           agent-id="${agentId}"
+                           dynamic-variables='{"session_id": "${sessionId}", "email": "${email}"}'
+                         ></elevenlabs-convai>`
+              }} />
+            )}
           </div>
         </div>
       </div>

@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      workflow_definitions: {
+        Row: {
+          agent_id: string
+          created_at: string
+          description: string
+          name: string
+          steps_config: Json
+          updated_at: string
+          workflow_type: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          description: string
+          name: string
+          steps_config?: Json
+          updated_at?: string
+          workflow_type: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          description?: string
+          name?: string
+          steps_config?: Json
+          updated_at?: string
+          workflow_type?: string
+        }
+        Relationships: []
+      }
       workflows: {
         Row: {
           created_at: string
