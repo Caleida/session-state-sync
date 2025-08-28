@@ -17,6 +17,24 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
   const [allStepsData, setAllStepsData] = useState<Record<string, any>>({});
   const { config, agentId, loading, error } = useWorkflowConfig(workflowType);
 
+  // Helper function to clean up future steps when resetting/moving backwards
+  const cleanupFutureSteps = (currentStep: string, stepOrder: string[], allStepsData: Record<string, any>) => {
+    const currentIndex = stepOrder.indexOf(currentStep);
+    if (currentIndex === -1) return allStepsData; // If step not found, return as is
+    
+    const cleanedData: Record<string, any> = {};
+    
+    // Keep only steps that are at or before the current step index
+    for (const [stepId, data] of Object.entries(allStepsData)) {
+      const stepIndex = stepOrder.indexOf(stepId);
+      if (stepIndex !== -1 && stepIndex <= currentIndex) {
+        cleanedData[stepId] = data;
+      }
+    }
+    
+    return cleanedData;
+  };
+
   useEffect(() => {
     let channel: any = null;
     let pollInterval: NodeJS.Timeout | null = null;
@@ -41,8 +59,15 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
           console.log('🔄 Estado cargado manualmente:', data.current_step);
           setCurrentStep(data.current_step);
           setStepData(data.step_data || {});
-          // Store step data for current step
-          setAllStepsData(prev => ({ ...prev, [data.current_step]: data.step_data || {} }));
+          // Store step data for current step and clean up future steps
+          setAllStepsData(prev => {
+            const newData = { ...prev, [data.current_step]: data.step_data || {} };
+            // Clean up future steps if stepOrder is available
+            if (config?.stepOrder) {
+              return cleanupFutureSteps(data.current_step, config.stepOrder, newData);
+            }
+            return newData;
+          });
         }
       } catch (error) {
         console.error('❌ Error loading state:', error);
@@ -73,8 +98,15 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
                 console.log('✅ Actualizando estado via realtime:', newData.current_step);
                 setCurrentStep(newData.current_step);
                 setStepData(newData.step_data || {});
-                // Store step data for current step
-                setAllStepsData(prev => ({ ...prev, [newData.current_step]: newData.step_data || {} }));
+                // Store step data for current step and clean up future steps
+                setAllStepsData(prev => {
+                  const updatedData = { ...prev, [newData.current_step]: newData.step_data || {} };
+                  // Clean up future steps if stepOrder is available
+                  if (config?.stepOrder) {
+                    return cleanupFutureSteps(newData.current_step, config.stepOrder, updatedData);
+                  }
+                  return updatedData;
+                });
               }
             }
           }
