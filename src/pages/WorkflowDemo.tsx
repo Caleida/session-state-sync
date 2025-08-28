@@ -144,11 +144,7 @@ const WorkflowDemo = () => {
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">{config.name}</h1>
-            <p className="text-muted-foreground mt-1">Workflow Type: {workflowType}</p>
-          </div>
+        <div className="flex justify-end items-center">
           <div className="flex space-x-2">
             <Button variant="outline" onClick={() => navigate('/')}>
               <ArrowLeft className="w-4 h-4 mr-2" />
