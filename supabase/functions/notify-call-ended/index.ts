@@ -39,6 +39,10 @@ serve(async (req) => {
       workflow_type
     } = await req.json();
     
+    if (!session_id || !workflow_type) {
+      throw new Error('session_id and workflow_type are required');
+    }
+    
     console.log('Request data:', { 
       session_id, 
       call_duration, 

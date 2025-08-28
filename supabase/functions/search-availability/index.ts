@@ -17,6 +17,10 @@ serve(async (req) => {
     
     const { session_id, current_step, preferred_date, preferred_time, service_type, workflow_type } = await req.json();
     
+    if (!session_id || !workflow_type) {
+      throw new Error('session_id and workflow_type are required');
+    }
+    
     console.log('Request data:', { session_id, current_step, preferred_date, preferred_time, service_type, workflow_type });
 
     // Initialize Supabase client

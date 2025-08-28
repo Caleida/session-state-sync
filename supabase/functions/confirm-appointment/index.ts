@@ -26,6 +26,10 @@ serve(async (req) => {
       workflow_type
     } = await req.json();
     
+    if (!session_id || !workflow_type || !selected_datetime) {
+      throw new Error('session_id, workflow_type, and selected_datetime are required');
+    }
+    
     console.log('Request data:', { 
       session_id, 
       selected_datetime, 
