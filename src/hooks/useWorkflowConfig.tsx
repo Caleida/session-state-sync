@@ -23,6 +23,7 @@ interface WorkflowConfig {
   workflowSteps: Record<string, WorkflowStep>;
   stepOrder: string[];
   simulateSteps: SimulateStep[];
+  simulationMessages: Record<string, string>;
 }
 
 interface WorkflowConfigReturn {
@@ -85,17 +86,39 @@ export const useWorkflowConfig = (workflowType: string): WorkflowConfigReturn =>
           };
         });
 
-        const simulateSteps: SimulateStep[] = (stepsConfig.simulate_steps as any[]).map((step: any) => ({
-          ...step,
-          icon: iconMap[step.iconName] || <Clock className="w-4 h-4" />
-        }));
+        // Extract simulation messages (fallback to existing structure if not migrated yet)
+        const simulationMessages = stepsConfig.simulation_messages || {};
+        
+        // Generate simulateSteps automatically from workflowSteps
+        const simulateSteps: SimulateStep[] = stepsConfig.step_order
+          .filter((stepId: string) => stepId !== 'waiting') // Exclude waiting step
+          .map((stepId: string) => {
+            const step = workflowSteps[stepId];
+            if (!step) return null;
+            
+            // Get message from simulation_messages or fallback to existing simulate_steps
+            let message = simulationMessages[stepId];
+            if (!message && stepsConfig.simulate_steps) {
+              const existingStep = stepsConfig.simulate_steps.find((s: any) => s.id === stepId);
+              message = existingStep?.data?.message || `${step.name}...`;
+            }
+            
+            return {
+              id: stepId,
+              name: step.name,
+              icon: iconMap[step.iconName.replace('-small', '') + '-small'] || iconMap[step.iconName] || <Clock className="w-4 h-4" />,
+              data: { message }
+            };
+          })
+          .filter(Boolean) as SimulateStep[];
 
         setConfig({
           name: data.name,
           description: data.description,
           workflowSteps,
           stepOrder: stepsConfig.step_order as string[],
-          simulateSteps
+          simulateSteps,
+          simulationMessages
         });
         
         setAgentId(data.agent_id);
