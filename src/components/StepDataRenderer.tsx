@@ -2,6 +2,7 @@ import React from 'react';
 import { AvailableSlotsDisplay } from './step-data/AvailableSlotsDisplay';
 import { AppointmentConfirmationDisplay } from './step-data/AppointmentConfirmationDisplay';
 import { CallSummaryDisplay } from './step-data/CallSummaryDisplay';
+import { CallStartedDisplay } from './step-data/CallStartedDisplay';
 import { GenericDataDisplay } from './step-data/GenericDataDisplay';
 
 interface StepDataRendererProps {
@@ -34,6 +35,14 @@ const hasCallSummary = (data: any): boolean => {
   );
 };
 
+const hasCallStarted = (data: any): boolean => {
+  return data && (
+    data.call_initiation ||
+    data.start_details ||
+    (data.call_initiation?.call_initiated === true)
+  );
+};
+
 const hasSimpleMessage = (data: any): boolean => {
   return data && typeof data.message === 'string';
 };
@@ -59,6 +68,10 @@ export const StepDataRenderer: React.FC<StepDataRendererProps> = ({
 
   if (hasConfirmedAppointment(stepData)) {
     return <AppointmentConfirmationDisplay data={stepData} isActive={isActive} />;
+  }
+
+  if (hasCallStarted(stepData)) {
+    return <CallStartedDisplay data={stepData} isActive={isActive} />;
   }
 
   if (hasCallSummary(stepData)) {
