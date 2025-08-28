@@ -3,15 +3,18 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Phone, Calendar, CheckCircle, XCircle, Clock, Search } from 'lucide-react';
+import { Clock } from 'lucide-react';
+import { useWorkflowConfig } from '@/hooks/useWorkflowConfig';
 
 interface WorkflowSimulatorProps {
   sessionId: string;
   email: string;
+  workflowType: string;
 }
 
-export const WorkflowSimulator: React.FC<WorkflowSimulatorProps> = ({ sessionId, email }) => {
+export const WorkflowSimulator: React.FC<WorkflowSimulatorProps> = ({ sessionId, email, workflowType }) => {
   const { toast } = useToast();
+  const { config, loading, error } = useWorkflowConfig(workflowType);
 
   const updateWorkflowStep = async (step: string, data: any = {}) => {
     try {
@@ -20,10 +23,11 @@ export const WorkflowSimulator: React.FC<WorkflowSimulatorProps> = ({ sessionId,
         .upsert({
           session_id: sessionId,
           email,
+          workflow_type: workflowType,
           current_step: step,
           step_data: data
         }, {
-          onConflict: 'session_id,email'
+          onConflict: 'session_id,email,workflow_type'
         });
 
       if (error) throw error;
@@ -42,57 +46,31 @@ export const WorkflowSimulator: React.FC<WorkflowSimulatorProps> = ({ sessionId,
     }
   };
 
-  const simulateSteps = [
-    {
-      id: 'call_started',
-      name: 'Iniciar Llamada',
-      icon: <Phone className="w-4 h-4" />,
-      data: { message: 'Llamada iniciada desde +34 123 456 789' }
-    },
-    {
-      id: 'searching_availability',
-      name: 'Buscar Disponibilidad',
-      icon: <Search className="w-4 h-4" />,
-      data: { message: 'Consultando API de BEYOND Citas...' }
-    },
-    {
-      id: 'showing_availability',
-      name: 'Mostrar Opciones',
-      icon: <Calendar className="w-4 h-4" />,
-      data: {
-        message: 'Opciones disponibles: 25/07 10:00, 26/07 15:30, 27/07 09:15',
-        available_slots: ['2024-07-25T10:00:00', '2024-07-26T15:30:00', '2024-07-27T09:15:00']
-      }
-    },
-    {
-      id: 'confirming_appointment',
-      name: 'Confirmar Cita',
-      icon: <CheckCircle className="w-4 h-4" />,
-      data: {
-        message: 'Enviando confirmación a BEYOND Citas...',
-        selected_slot: '2024-07-25T10:00:00'
-      }
-    },
-    {
-      id: 'appointment_confirmed',
-      name: 'Cita Confirmada',
-      icon: <CheckCircle className="w-4 h-4" />,
-      data: {
-        message: 'Cita confirmada para el 25/07/2024 a las 10:00',
-        appointment_id: 'APT-12345'
-      }
-    },
-    {
-      id: 'call_ended',
-      name: 'Finalizar Llamada',
-      icon: <XCircle className="w-4 h-4" />,
-      data: { message: 'Llamada finalizada. Duración: 3:42 min' }
-    }
-  ];
-
   const resetWorkflow = () => {
     updateWorkflowStep('waiting', { message: 'Workflow reiniciado' });
   };
+
+  if (loading) {
+    return (
+      <Card className="w-full max-w-2xl">
+        <CardContent className="p-6 text-center">
+          <p>Cargando configuración del simulador...</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error || !config) {
+    return (
+      <Card className="w-full max-w-2xl">
+        <CardContent className="p-6 text-center">
+          <p className="text-red-500">Error: {error || 'Configuración no disponible'}</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const { simulateSteps } = config;
 
   return (
     <Card className="w-full max-w-2xl">

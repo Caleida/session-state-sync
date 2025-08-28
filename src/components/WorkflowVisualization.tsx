@@ -2,78 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Phone, Calendar, CheckCircle, XCircle, Clock, ArrowDown } from 'lucide-react';
-
-interface WorkflowStep {
-  id: string;
-  name: string;
-  description: string;
-  icon: React.ReactNode;
-  actor: 'user' | 'beyond';
-}
-
-const workflowSteps: Record<string, WorkflowStep> = {
-  waiting: {
-    id: 'waiting',
-    name: 'Esperando',
-    description: 'Esperando inicio de llamada',
-    icon: <Clock className="w-6 h-6" />,
-    actor: 'user'
-  },
-  call_started: {
-    id: 'call_started',
-    name: 'Llamada Iniciada',
-    description: 'Teléfono de origen conectado',
-    icon: <Phone className="w-6 h-6" />,
-    actor: 'user'
-  },
-  searching_availability: {
-    id: 'searching_availability',
-    name: 'Buscando Disponibilidad',
-    description: 'Consultando BEYOND Citas API',
-    icon: <Calendar className="w-6 h-6" />,
-    actor: 'beyond'
-  },
-  showing_availability: {
-    id: 'showing_availability',
-    name: 'Mostrando Disponibilidad',
-    description: 'Presentando opciones de citas',
-    icon: <Calendar className="w-6 h-6" />,
-    actor: 'user'
-  },
-  confirming_appointment: {
-    id: 'confirming_appointment',
-    name: 'Confirmando Cita',
-    description: 'Enviando confirmación a BEYOND Citas',
-    icon: <CheckCircle className="w-6 h-6" />,
-    actor: 'beyond'
-  },
-  appointment_confirmed: {
-    id: 'appointment_confirmed',
-    name: 'Cita Confirmada',
-    description: 'Cita registrada exitosamente',
-    icon: <CheckCircle className="w-6 h-6" />,
-    actor: 'user'
-  },
-  call_ended: {
-    id: 'call_ended',
-    name: 'Llamada Finalizada',
-    description: 'Proceso completado',
-    icon: <XCircle className="w-6 h-6" />,
-    actor: 'user'
-  }
-};
-
-const stepOrder = ['waiting', 'call_started', 'searching_availability', 'showing_availability', 'confirming_appointment', 'appointment_confirmed', 'call_ended'];
+import { CheckCircle, ArrowDown } from 'lucide-react';
+import { useWorkflowConfig } from '@/hooks/useWorkflowConfig';
 
 interface WorkflowVisualizationProps {
   sessionId: string;
   email: string;
+  workflowType: string;
 }
 
-export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ sessionId, email }) => {
+export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ sessionId, email, workflowType }) => {
   const [currentStep, setCurrentStep] = useState<string>('waiting');
   const [stepData, setStepData] = useState<any>({});
+  const { config, loading, error } = useWorkflowConfig(workflowType);
 
   useEffect(() => {
     // Subscribe to realtime changes
@@ -107,6 +48,7 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
           .from('workflows')
           .select('current_step, step_data')
           .eq('session_id', sessionId)
+          .eq('workflow_type', workflowType)
           .maybeSingle();
         
         if (error) {
@@ -131,6 +73,24 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
       supabase.removeChannel(channel);
     };
   }, [sessionId]);
+
+  if (loading) {
+    return (
+      <div className="w-full max-w-4xl mx-auto p-6 text-center">
+        <p>Cargando configuración del workflow...</p>
+      </div>
+    );
+  }
+
+  if (error || !config) {
+    return (
+      <div className="w-full max-w-4xl mx-auto p-6 text-center">
+        <p className="text-red-500">Error: {error || 'Configuración no disponible'}</p>
+      </div>
+    );
+  }
+
+  const { workflowSteps, stepOrder } = config;
 
   const getStepIndex = (step: string) => stepOrder.indexOf(step);
   const currentStepIndex = getStepIndex(currentStep);
