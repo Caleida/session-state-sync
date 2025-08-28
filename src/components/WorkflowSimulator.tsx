@@ -43,6 +43,18 @@ export const WorkflowSimulator: React.FC<WorkflowSimulatorProps> = ({ sessionId,
 
       console.log('✅ Workflow actualizado exitosamente:', result);
 
+      // Forzar actualización manual después de 500ms para asegurar sincronización
+      setTimeout(async () => {
+        console.log('🔄 Verificando sincronización...');
+        const { data: checkData } = await supabase
+          .from('workflows')
+          .select('current_step, step_data')
+          .eq('session_id', sessionId)
+          .eq('workflow_type', workflowType)
+          .single();
+        console.log('🔄 Estado verificado:', checkData);
+      }, 500);
+
       toast({
         title: "Paso actualizado",
         description: `Workflow actualizado a: ${step}`,

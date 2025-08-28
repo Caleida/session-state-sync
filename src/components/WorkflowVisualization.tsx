@@ -17,9 +17,12 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
   const { config, agentId, loading, error } = useWorkflowConfig(workflowType);
 
   useEffect(() => {
-    // Subscribe to realtime changes
+    // Subscribe to realtime changes with better error handling
+    const channelName = `workflow-changes-${sessionId}`;
+    console.log('🔗 Creando canal realtime:', channelName);
+    
     const channel = supabase
-      .channel('workflow-changes')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -30,19 +33,32 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
         },
         (payload) => {
           console.log('📡 Cambio de workflow recibido:', payload);
-          console.log('📡 SessionId actual:', sessionId);
+          console.log('📡 Filtro SessionId:', sessionId);
+          console.log('📡 Evento tipo:', payload.eventType);
+          
           if (payload.new && typeof payload.new === 'object') {
             const newData = payload.new as any;
+            console.log('📡 Datos nuevos completos:', newData);
+            console.log('📡 Session ID del evento:', newData.session_id);
+            console.log('📡 Workflow type del evento:', newData.workflow_type);
             console.log('📡 Nuevo paso:', newData.current_step);
-            if (newData.current_step) {
+            
+            // Verificar que coincida exactamente con nuestros parámetros
+            if (newData.session_id === sessionId && 
+                newData.workflow_type === workflowType && 
+                newData.current_step) {
               setCurrentStep(newData.current_step);
               setStepData(newData.step_data || {});
-              console.log('📡 Estado actualizado a:', newData.current_step);
+              console.log('✅ Estado actualizado a:', newData.current_step);
+            } else {
+              console.log('❌ Evento filtrado - no coincide con sesión actual');
             }
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Estado de suscripción:', status);
+      });
 
     // Load initial state
     const loadInitialState = async () => {
@@ -76,9 +92,10 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
     loadInitialState();
 
     return () => {
+      console.log('🔗 Cerrando canal realtime:', channelName);
       supabase.removeChannel(channel);
     };
-  }, [sessionId]);
+  }, [sessionId, workflowType]);
 
   if (loading) {
     return (
