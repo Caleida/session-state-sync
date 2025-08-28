@@ -7,12 +7,11 @@ import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbS
 import { WorkflowVisualization } from '@/components/WorkflowVisualization';
 import { WorkflowSimulator } from '@/components/WorkflowSimulator';
 import { useWorkflowConfig } from '@/hooks/useWorkflowConfig';
-import { Mail, Play, ArrowLeft, Home } from 'lucide-react';
+import { Play, ArrowLeft, Home } from 'lucide-react';
 
 const WorkflowDemo = () => {
   const { workflowType } = useParams<{ workflowType: string }>();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isStarted, setIsStarted] = useState(false);
   
@@ -31,29 +30,24 @@ const WorkflowDemo = () => {
     
     // Check localStorage for existing session
     const storageKey = `workflow_${workflowType}_session_id`;
-    const emailKey = `workflow_${workflowType}_email`;
     
     const storedSessionId = localStorage.getItem(storageKey);
-    const storedEmail = localStorage.getItem(emailKey);
     
-    if (storedSessionId && storedEmail) {
+    if (storedSessionId) {
       setSessionId(storedSessionId);
-      setEmail(storedEmail);
       setIsStarted(true);
     }
   }, [workflowType]);
 
   const startWorkflow = () => {
-    if (!email.trim() || !workflowType) return;
+    if (!workflowType) return;
     
     const newSessionId = crypto.randomUUID();
     
-    // Store in localStorage with workflow-specific keys
+    // Store in localStorage with workflow-specific key
     const storageKey = `workflow_${workflowType}_session_id`;
-    const emailKey = `workflow_${workflowType}_email`;
     
     localStorage.setItem(storageKey, newSessionId);
-    localStorage.setItem(emailKey, email);
     
     setSessionId(newSessionId);
     setIsStarted(true);
@@ -63,12 +57,9 @@ const WorkflowDemo = () => {
     if (!workflowType) return;
     
     const storageKey = `workflow_${workflowType}_session_id`;
-    const emailKey = `workflow_${workflowType}_email`;
     
     localStorage.removeItem(storageKey);
-    localStorage.removeItem(emailKey);
     setSessionId(null);
-    setEmail('');
     setIsStarted(false);
   };
 
@@ -102,27 +93,17 @@ const WorkflowDemo = () => {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="flex items-center justify-center space-x-2">
-              <Mail className="w-6 h-6" />
+              <Play className="w-6 h-6" />
               <span>Demo Workflow: {config.workflowSteps[config.stepOrder[0]]?.name || workflowType}</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Introduce tu email para comenzar:
-              </label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="tu-email@ejemplo.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && startWorkflow()}
-              />
-            </div>
+            <div className="text-center space-y-4">
+              <p className="text-muted-foreground">
+                ¡Listo para comenzar el demo del workflow!
+              </p>
               <Button 
                 onClick={startWorkflow}
-                disabled={!email.trim()}
                 className="w-full"
               >
                 <Play className="w-4 h-4 mr-2" />
@@ -136,6 +117,7 @@ const WorkflowDemo = () => {
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Volver
               </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -181,19 +163,19 @@ const WorkflowDemo = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             {sessionId && (
-              <WorkflowVisualization sessionId={sessionId} email={email} workflowType={workflowType} />
+              <WorkflowVisualization sessionId={sessionId} workflowType={workflowType} />
             )}
           </div>
           
           <div className="space-y-4">
             {sessionId && (
-              <WorkflowSimulator sessionId={sessionId} email={email} workflowType={workflowType} />
+              <WorkflowSimulator sessionId={sessionId} workflowType={workflowType} />
             )}
             {agentId && (
               <div dangerouslySetInnerHTML={{
                 __html: `<elevenlabs-convai
                            agent-id="${agentId}"
-                           dynamic-variables='{"session_id": "${sessionId}", "email": "${email}"}'
+                           dynamic-variables='{"session_id": "${sessionId}"}'
                          ></elevenlabs-convai>`
               }} />
             )}

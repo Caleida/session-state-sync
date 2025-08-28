@@ -7,11 +7,10 @@ import { useWorkflowConfig } from '@/hooks/useWorkflowConfig';
 
 interface WorkflowVisualizationProps {
   sessionId: string;
-  email: string;
   workflowType: string;
 }
 
-export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ sessionId, email, workflowType }) => {
+export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ sessionId, workflowType }) => {
   const [currentStep, setCurrentStep] = useState<string>('waiting');
   const [stepData, setStepData] = useState<any>({});
   const { config, agentId, loading, error } = useWorkflowConfig(workflowType);
@@ -157,9 +156,10 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold mb-2">{config.name}</h2>
         <p className="text-muted-foreground mb-1">{config.description}</p>
-        <p className="text-muted-foreground">Email: {email}</p>
-        <p className="text-sm text-muted-foreground">Session ID: {sessionId}</p>
-        <p className="text-sm text-muted-foreground">Workflow Type: {workflowType}</p>
+        <div className="text-sm text-muted-foreground space-y-1">
+          <div>Session ID: {sessionId}</div>
+          <div>Workflow: {workflowType}</div>
+        </div>
       </div>
 
       <div className="space-y-4">

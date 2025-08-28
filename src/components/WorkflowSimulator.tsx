@@ -8,18 +8,16 @@ import { useWorkflowConfig } from '@/hooks/useWorkflowConfig';
 
 interface WorkflowSimulatorProps {
   sessionId: string;
-  email: string;
   workflowType: string;
 }
 
-export const WorkflowSimulator: React.FC<WorkflowSimulatorProps> = ({ sessionId, email, workflowType }) => {
+export const WorkflowSimulator: React.FC<WorkflowSimulatorProps> = ({ sessionId, workflowType }) => {
   const { toast } = useToast();
   const { config, agentId, loading, error } = useWorkflowConfig(workflowType);
 
   const updateWorkflowStep = async (step: string, data: any = {}) => {
     console.log('🔄 Actualizando workflow:', { 
       sessionId, 
-      email, 
       workflowType, 
       step, 
       data 
@@ -30,12 +28,11 @@ export const WorkflowSimulator: React.FC<WorkflowSimulatorProps> = ({ sessionId,
         .from('workflows')
         .upsert({
           session_id: sessionId,
-          email,
           workflow_type: workflowType,
           current_step: step,
           step_data: data
         }, {
-          onConflict: 'session_id,email,workflow_type'
+          onConflict: 'session_id,workflow_type'
         })
         .select();
 

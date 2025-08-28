@@ -9,7 +9,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.52.1';
  * 
  * Required Parameters:
  * - session_id: Unique identifier for the session
- * - email: User's email address 
  * - workflow_type: Type of workflow ('appointments', 'consultations', 'support', 'sales', 'general')
  * 
  * Optional Parameters:
@@ -34,7 +33,6 @@ serve(async (req) => {
     
     const { 
       session_id, 
-      email, 
       call_duration, 
       termination_reason,
       call_summary,
@@ -43,15 +41,14 @@ serve(async (req) => {
     
     console.log('Request data:', { 
       session_id, 
-      email, 
       call_duration, 
       termination_reason,
       workflow_type
     });
 
     // Validate required fields
-    if (!session_id || !email || !workflow_type) {
-      throw new Error('session_id, email, and workflow_type are required parameters');
+    if (!session_id || !workflow_type) {
+      throw new Error('session_id and workflow_type are required parameters');
     }
 
     // Initialize Supabase client first for validation
@@ -113,13 +110,12 @@ serve(async (req) => {
       .from('workflows')
       .upsert({
         session_id: session_id,
-        email: email,
         workflow_type: workflow_type, // No fallback needed since it's validated above
         current_step: 'call_ended',
         step_data: stepData,
         updated_at: new Date().toISOString()
       }, {
-        onConflict: 'session_id,email,workflow_type'
+        onConflict: 'session_id,workflow_type'
       });
 
     if (updateError) {
