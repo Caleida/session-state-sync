@@ -48,11 +48,55 @@ export const useWorkflowConfig = (workflowType: string) => {
         setLoading(true);
         setError(null);
 
-        const { data, error: dbError } = await supabase.rpc('get_workflow_config', {
-          p_workflow_type: workflowType
-        });
+        // For now, return hardcoded config since RPC function doesn't exist yet
+        const defaultConfig = {
+          workflow_steps: {
+            waiting: {
+              id: 'waiting',
+              name: 'Esperando llamada',
+              description: 'El usuario está esperando a que inicie la conversación',
+              iconName: 'phone',
+              actor: 'user'
+            },
+            searching: {
+              id: 'searching',
+              name: 'Buscando disponibilidad',
+              description: 'BEYOND está buscando citas disponibles',
+              iconName: 'search',
+              actor: 'beyond'
+            },
+            confirming: {
+              id: 'confirming',
+              name: 'Confirmando cita',
+              description: 'BEYOND está confirmando los detalles de la cita',
+              iconName: 'calendar',
+              actor: 'beyond'
+            },
+            confirmed: {
+              id: 'confirmed',
+              name: 'Cita confirmada',
+              description: 'La cita ha sido confirmada exitosamente',
+              iconName: 'check-circle',
+              actor: 'beyond'
+            },
+            cancelled: {
+              id: 'cancelled',
+              name: 'Cita cancelada',
+              description: 'La cita ha sido cancelada',
+              iconName: 'x-circle',
+              actor: 'beyond'
+            }
+          },
+          step_order: ['waiting', 'searching', 'confirming', 'confirmed'],
+          simulate_steps: [
+            { id: 'searching', name: 'Buscar', iconName: 'search-small', data: { message: 'Buscando disponibilidad...' } },
+            { id: 'confirming', name: 'Confirmar', iconName: 'calendar-small', data: { message: 'Confirmando cita...' } },
+            { id: 'confirmed', name: 'Completar', iconName: 'check-circle-small', data: { message: 'Cita confirmada!' } },
+            { id: 'cancelled', name: 'Cancelar', iconName: 'x-circle-small', data: { message: 'Cita cancelada' } }
+          ]
+        };
 
-        if (dbError) throw dbError;
+        const data = defaultConfig;
 
         if (!data) {
           throw new Error(`Configuración de workflow '${workflowType}' no encontrada`);

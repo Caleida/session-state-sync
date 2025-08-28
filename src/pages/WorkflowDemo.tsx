@@ -95,13 +95,13 @@ const WorkflowDemo = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             {sessionId && (
-              <WorkflowVisualization sessionId={sessionId} email={email} />
+              <WorkflowVisualization sessionId={sessionId} email={email} workflowType="appointments" />
             )}
           </div>
           
           <div className="space-y-4">
             {sessionId && (
-              <WorkflowSimulator sessionId={sessionId} email={email} />
+              <WorkflowSimulator sessionId={sessionId} email={email} workflowType="appointments" />
             )}
             <div dangerouslySetInnerHTML={{
               __html: `<elevenlabs-convai
