@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.notify-call-ended]
 verify_jwt = false
+
+[functions.send-confirmation-sms]
+verify_jwt = false

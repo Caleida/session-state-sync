@@ -3,6 +3,7 @@ import { AvailableSlotsDisplay } from './step-data/AvailableSlotsDisplay';
 import { AppointmentConfirmationDisplay } from './step-data/AppointmentConfirmationDisplay';
 import { CallSummaryDisplay } from './step-data/CallSummaryDisplay';
 import { CallStartedDisplay } from './step-data/CallStartedDisplay';
+import { SMSConfirmationDisplay } from './step-data/SMSConfirmationDisplay';
 import { GenericDataDisplay } from './step-data/GenericDataDisplay';
 
 interface StepDataRendererProps {
@@ -43,6 +44,10 @@ const hasCallStarted = (data: any): boolean => {
   );
 };
 
+const hasSMSConfirmation = (data: any): boolean => {
+  return data && data.sms_confirmation;
+};
+
 const hasSimpleMessage = (data: any): boolean => {
   return data && typeof data.message === 'string';
 };
@@ -72,6 +77,10 @@ export const StepDataRenderer: React.FC<StepDataRendererProps> = ({
 
   if (hasCallStarted(stepData)) {
     return <CallStartedDisplay data={stepData} isActive={isActive} />;
+  }
+
+  if (hasSMSConfirmation(stepData)) {
+    return <SMSConfirmationDisplay data={stepData} isActive={isActive} />;
   }
 
   if (hasCallSummary(stepData)) {
