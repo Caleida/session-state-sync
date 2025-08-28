@@ -16,7 +16,12 @@ const hasAvailableSlots = (data: any): boolean => {
 };
 
 const hasConfirmedAppointment = (data: any): boolean => {
-  return data && (data.confirmed_appointment || data.confirmation_number);
+  return data && (
+    data.confirmed_appointment || 
+    data.confirmation_number ||
+    data.appointment ||
+    data.confirmation_details
+  );
 };
 
 const hasCallSummary = (data: any): boolean => {
