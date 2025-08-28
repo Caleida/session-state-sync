@@ -20,14 +20,16 @@ serve(async (req) => {
       email, 
       call_duration, 
       termination_reason,
-      call_summary 
+      call_summary,
+      workflow_type
     } = await req.json();
     
     console.log('Request data:', { 
       session_id, 
       email, 
       call_duration, 
-      termination_reason 
+      termination_reason,
+      workflow_type
     });
 
     // Validate required fields
@@ -76,11 +78,12 @@ serve(async (req) => {
       .upsert({
         session_id: session_id,
         email: email,
+        workflow_type: workflow_type || 'appointments',
         current_step: 'call_ended',
         step_data: stepData,
         updated_at: new Date().toISOString()
       }, {
-        onConflict: 'session_id,email'
+        onConflict: 'session_id,email,workflow_type'
       });
 
     if (updateError) {

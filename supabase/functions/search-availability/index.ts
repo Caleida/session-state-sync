@@ -15,9 +15,9 @@ serve(async (req) => {
   try {
     console.log('Search availability request received');
     
-    const { session_id, email, current_step, preferred_date, preferred_time, service_type } = await req.json();
+    const { session_id, email, current_step, preferred_date, preferred_time, service_type, workflow_type } = await req.json();
     
-    console.log('Request data:', { session_id, email, current_step, preferred_date, preferred_time, service_type });
+    console.log('Request data:', { session_id, email, current_step, preferred_date, preferred_time, service_type, workflow_type });
 
     // Initialize Supabase client
     const supabase = createClient(
@@ -79,11 +79,12 @@ serve(async (req) => {
       .upsert({
         session_id: session_id,
         email: email,
+        workflow_type: workflow_type || 'appointments',
         current_step: 'showing_availability',
         step_data: stepData,
         updated_at: new Date().toISOString()
       }, {
-        onConflict: 'session_id,email'
+        onConflict: 'session_id,email,workflow_type'
       });
 
     if (updateError) {

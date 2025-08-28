@@ -23,7 +23,8 @@ serve(async (req) => {
       client_name, 
       client_phone, 
       service_type, 
-      notes 
+      notes,
+      workflow_type
     } = await req.json();
     
     console.log('Request data:', { 
@@ -32,7 +33,8 @@ serve(async (req) => {
       selected_datetime, 
       client_name, 
       client_phone, 
-      service_type 
+      service_type,
+      workflow_type
     });
 
     // Initialize Supabase client
@@ -83,11 +85,12 @@ serve(async (req) => {
       .upsert({
         session_id: session_id,
         email: email,
+        workflow_type: workflow_type || 'appointments',
         current_step: 'appointment_confirmed',
         step_data: stepData,
         updated_at: new Date().toISOString()
       }, {
-        onConflict: 'session_id,email'
+        onConflict: 'session_id,email,workflow_type'
       });
 
     if (updateError) {
