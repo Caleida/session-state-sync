@@ -23,6 +23,7 @@ export type Database = {
           session_id: string
           step_data: Json | null
           updated_at: string
+          workflow_type: string
         }
         Insert: {
           created_at?: string
@@ -32,6 +33,7 @@ export type Database = {
           session_id: string
           step_data?: Json | null
           updated_at?: string
+          workflow_type?: string
         }
         Update: {
           created_at?: string
@@ -41,6 +43,7 @@ export type Database = {
           session_id?: string
           step_data?: Json | null
           updated_at?: string
+          workflow_type?: string
         }
         Relationships: []
       }
