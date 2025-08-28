@@ -6,5 +6,8 @@ verify_jwt = false
 [functions.confirm-appointment]
 verify_jwt = false
 
+[functions.notify-call-started]
+verify_jwt = false
+
 [functions.notify-call-ended]
 verify_jwt = false
