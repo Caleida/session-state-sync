@@ -34,14 +34,16 @@ serve(async (req) => {
     const { 
       session_id, 
       call_duration, 
-      termination_reason,
-      call_summary,
-      workflow_type
+      termination_reason, 
+      call_summary
     } = await req.json();
     
-    if (!session_id || !workflow_type) {
-      throw new Error('session_id and workflow_type are required');
+    if (!session_id) {
+      throw new Error('session_id is required');
     }
+    
+    // Always use 'booking' as workflow_type since this function is only used for booking flow
+    const workflow_type = 'booking';
     
     console.log('Request data:', { 
       session_id, 
@@ -49,11 +51,6 @@ serve(async (req) => {
       termination_reason,
       workflow_type
     });
-
-    // Validate required fields
-    if (!session_id || !workflow_type) {
-      throw new Error('session_id and workflow_type are required parameters');
-    }
 
     // Initialize Supabase client first for validation
     const supabase = createClient(

@@ -22,13 +22,15 @@ serve(async (req) => {
       client_name, 
       client_phone, 
       service_type, 
-      notes,
-      workflow_type
+      notes
     } = await req.json();
     
-    if (!session_id || !workflow_type || !selected_datetime) {
-      throw new Error('session_id, workflow_type, and selected_datetime are required');
+    if (!session_id || !selected_datetime) {
+      throw new Error('session_id and selected_datetime are required');
     }
+    
+    // Always use 'booking' as workflow_type since this function is only used for booking flow
+    const workflow_type = 'booking';
     
     console.log('Request data:', { 
       session_id, 
@@ -85,7 +87,7 @@ serve(async (req) => {
       .from('workflows')
       .upsert({
         session_id: session_id,
-        workflow_type: workflow_type || 'appointments',
+        workflow_type: workflow_type,
         current_step: 'appointment_confirmed',
         step_data: stepData,
         updated_at: new Date().toISOString()

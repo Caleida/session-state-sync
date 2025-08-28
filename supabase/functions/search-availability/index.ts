@@ -15,11 +15,14 @@ serve(async (req) => {
   try {
     console.log('Search availability request received');
     
-    const { session_id, current_step, preferred_date, preferred_time, service_type, workflow_type } = await req.json();
+    const { session_id, current_step, preferred_date, preferred_time, service_type } = await req.json();
     
-    if (!session_id || !workflow_type) {
-      throw new Error('session_id and workflow_type are required');
+    if (!session_id) {
+      throw new Error('session_id is required');
     }
+    
+    // Always use 'booking' as workflow_type since this function is only used for booking flow
+    const workflow_type = 'booking';
     
     console.log('Request data:', { session_id, current_step, preferred_date, preferred_time, service_type, workflow_type });
 
