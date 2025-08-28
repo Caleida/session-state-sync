@@ -17,52 +17,11 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
   const { config, agentId, loading, error } = useWorkflowConfig(workflowType);
 
   useEffect(() => {
-    // Subscribe to realtime changes with better error handling
-    const channelName = `workflow-changes-${sessionId}`;
-    console.log('🔗 Creando canal realtime:', channelName);
-    
-    const channel = supabase
-      .channel(channelName)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'workflows',
-          filter: `session_id=eq.${sessionId}`
-        },
-        (payload) => {
-          console.log('📡 Cambio de workflow recibido:', payload);
-          console.log('📡 Filtro SessionId:', sessionId);
-          console.log('📡 Evento tipo:', payload.eventType);
-          
-          if (payload.new && typeof payload.new === 'object') {
-            const newData = payload.new as any;
-            console.log('📡 Datos nuevos completos:', newData);
-            console.log('📡 Session ID del evento:', newData.session_id);
-            console.log('📡 Workflow type del evento:', newData.workflow_type);
-            console.log('📡 Nuevo paso:', newData.current_step);
-            
-            // Verificar que coincida exactamente con nuestros parámetros
-            if (newData.session_id === sessionId && 
-                newData.workflow_type === workflowType && 
-                newData.current_step) {
-              setCurrentStep(newData.current_step);
-              setStepData(newData.step_data || {});
-              console.log('✅ Estado actualizado a:', newData.current_step);
-            } else {
-              console.log('❌ Evento filtrado - no coincide con sesión actual');
-            }
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log('📡 Estado de suscripción:', status);
-      });
+    let channel: any = null;
+    let pollInterval: NodeJS.Timeout | null = null;
 
-    // Load initial state
-    const loadInitialState = async () => {
-      console.log('🔍 Cargando estado inicial para:', { sessionId, workflowType });
+    // Función para cargar el estado manualmente
+    const loadCurrentState = async () => {
       try {
         const { data, error } = await supabase
           .from('workflows')
@@ -76,24 +35,78 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
           return;
         }
         
-        console.log('🔍 Estado inicial encontrado:', data);
         if (data && data.current_step) {
+          console.log('🔄 Estado cargado manualmente:', data.current_step);
           setCurrentStep(data.current_step);
           setStepData(data.step_data || {});
-          console.log('🔍 Estado establecido a:', data.current_step);
-        } else {
-          console.log('🔍 No se encontró workflow existente, usando estado por defecto: waiting');
         }
       } catch (error) {
-        console.error('❌ Unexpected error loading workflow state:', error);
+        console.error('❌ Error loading state:', error);
       }
     };
 
-    loadInitialState();
+    // Intentar suscripción realtime primero
+    const setupRealtime = () => {
+      console.log('🔗 Configurando suscripción realtime...');
+      
+      channel = supabase
+        .channel('workflows')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'workflows',
+            filter: `session_id=eq.${sessionId}`
+          },
+          (payload) => {
+            console.log('📡 Cambio realtime recibido:', payload);
+            if (payload.new && typeof payload.new === 'object') {
+              const newData = payload.new as any;
+              if (newData.session_id === sessionId && 
+                  newData.workflow_type === workflowType && 
+                  newData.current_step) {
+                console.log('✅ Actualizando estado via realtime:', newData.current_step);
+                setCurrentStep(newData.current_step);
+                setStepData(newData.step_data || {});
+              }
+            }
+          }
+        )
+        .subscribe((status) => {
+          console.log('📡 Estado de suscripción:', status);
+          
+          if (status === 'SUBSCRIBED') {
+            console.log('✅ Realtime conectado correctamente');
+            // Limpiar polling si estaba activo
+            if (pollInterval) {
+              clearInterval(pollInterval);
+              pollInterval = null;
+            }
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+            console.log('⚠️ Realtime falló, activando polling como fallback');
+            // Activar polling como fallback
+            if (!pollInterval) {
+              pollInterval = setInterval(loadCurrentState, 2000);
+            }
+          }
+        });
+    };
+
+    // Cargar estado inicial
+    loadCurrentState();
+    
+    // Configurar realtime
+    setupRealtime();
 
     return () => {
-      console.log('🔗 Cerrando canal realtime:', channelName);
-      supabase.removeChannel(channel);
+      console.log('🔗 Limpiando suscripciones...');
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
     };
   }, [sessionId, workflowType]);
 
