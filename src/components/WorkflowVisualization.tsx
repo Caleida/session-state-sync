@@ -19,6 +19,7 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
   useEffect(() => {
     let channel: any = null;
     let pollInterval: NodeJS.Timeout | null = null;
+    let isRealtimeWorking = false;
 
     // Función para cargar el estado manualmente
     const loadCurrentState = async () => {
@@ -45,7 +46,7 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
       }
     };
 
-    // Intentar suscripción realtime primero
+    // Configurar suscripción realtime con reintentos
     const setupRealtime = () => {
       console.log('🔗 Configurando suscripción realtime...');
       
@@ -74,20 +75,22 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
           }
         )
         .subscribe((status) => {
-          console.log('📡 Estado de suscripción:', status);
+          console.log('📡 Estado de suscripción realtime:', status);
           
           if (status === 'SUBSCRIBED') {
-            console.log('✅ Realtime conectado correctamente');
+            console.log('✅ Realtime conectado - desactivando polling');
+            isRealtimeWorking = true;
             // Limpiar polling si estaba activo
             if (pollInterval) {
               clearInterval(pollInterval);
               pollInterval = null;
             }
           } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-            console.log('⚠️ Realtime falló, activando polling como fallback');
-            // Activar polling como fallback
+            console.log('⚠️ Realtime falló - activando polling como respaldo');
+            isRealtimeWorking = false;
+            // Solo activar polling si realtime no funciona
             if (!pollInterval) {
-              pollInterval = setInterval(loadCurrentState, 2000);
+              pollInterval = setInterval(loadCurrentState, 3000);
             }
           }
         });
@@ -96,8 +99,16 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
     // Cargar estado inicial
     loadCurrentState();
     
-    // Configurar realtime
+    // Intentar realtime primero
     setupRealtime();
+    
+    // Timeout de respaldo: si después de 5 segundos no hay conexión realtime, usar polling
+    const fallbackTimeout = setTimeout(() => {
+      if (!isRealtimeWorking && !pollInterval) {
+        console.log('⏰ Timeout realtime - activando polling de respaldo');
+        pollInterval = setInterval(loadCurrentState, 3000);
+      }
+    }, 5000);
 
     return () => {
       console.log('🔗 Limpiando suscripciones...');
@@ -106,6 +117,9 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
       }
       if (pollInterval) {
         clearInterval(pollInterval);
+      }
+      if (fallbackTimeout) {
+        clearTimeout(fallbackTimeout);
       }
     };
   }, [sessionId, workflowType]);
