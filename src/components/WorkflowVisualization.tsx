@@ -155,9 +155,11 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
   return (
     <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold mb-2">Workflow de Gestión de Citas</h2>
+        <h2 className="text-2xl font-bold mb-2">{config.name}</h2>
+        <p className="text-muted-foreground mb-1">{config.description}</p>
         <p className="text-muted-foreground">Email: {email}</p>
         <p className="text-sm text-muted-foreground">Session ID: {sessionId}</p>
+        <p className="text-sm text-muted-foreground">Workflow Type: {workflowType}</p>
       </div>
 
       <div className="space-y-4">

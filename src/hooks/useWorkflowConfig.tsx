@@ -18,6 +18,8 @@ interface SimulateStep {
 }
 
 interface WorkflowConfig {
+  name: string;
+  description: string;
   workflowSteps: Record<string, WorkflowStep>;
   stepOrder: string[];
   simulateSteps: SimulateStep[];
@@ -89,6 +91,8 @@ export const useWorkflowConfig = (workflowType: string): WorkflowConfigReturn =>
         }));
 
         setConfig({
+          name: data.name,
+          description: data.description,
           workflowSteps,
           stepOrder: stepsConfig.step_order as string[],
           simulateSteps

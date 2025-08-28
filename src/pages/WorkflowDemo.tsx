@@ -146,7 +146,7 @@ const WorkflowDemo = () => {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">Demo: {config.workflowSteps[config.stepOrder[0]]?.name || workflowType}</h1>
+            <h1 className="text-3xl font-bold">{config.name}</h1>
             <p className="text-muted-foreground mt-1">Workflow Type: {workflowType}</p>
           </div>
           <div className="flex space-x-2">
