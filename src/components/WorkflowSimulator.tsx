@@ -17,8 +17,16 @@ export const WorkflowSimulator: React.FC<WorkflowSimulatorProps> = ({ sessionId,
   const { config, agentId, loading, error } = useWorkflowConfig(workflowType);
 
   const updateWorkflowStep = async (step: string, data: any = {}) => {
+    console.log('🔄 Actualizando workflow:', { 
+      sessionId, 
+      email, 
+      workflowType, 
+      step, 
+      data 
+    });
+    
     try {
-      const { error } = await supabase
+      const { error, data: result } = await supabase
         .from('workflows')
         .upsert({
           session_id: sessionId,
@@ -28,16 +36,19 @@ export const WorkflowSimulator: React.FC<WorkflowSimulatorProps> = ({ sessionId,
           step_data: data
         }, {
           onConflict: 'session_id,email,workflow_type'
-        });
+        })
+        .select();
 
       if (error) throw error;
+
+      console.log('✅ Workflow actualizado exitosamente:', result);
 
       toast({
         title: "Paso actualizado",
         description: `Workflow actualizado a: ${step}`,
       });
     } catch (error) {
-      console.error('Error updating workflow:', error);
+      console.error('❌ Error updating workflow:', error);
       toast({
         title: "Error",
         description: "No se pudo actualizar el workflow",

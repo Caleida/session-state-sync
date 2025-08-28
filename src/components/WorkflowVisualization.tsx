@@ -29,12 +29,15 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
           filter: `session_id=eq.${sessionId}`
         },
         (payload) => {
-          console.log('Workflow change:', payload);
+          console.log('📡 Cambio de workflow recibido:', payload);
+          console.log('📡 SessionId actual:', sessionId);
           if (payload.new && typeof payload.new === 'object') {
             const newData = payload.new as any;
+            console.log('📡 Nuevo paso:', newData.current_step);
             if (newData.current_step) {
               setCurrentStep(newData.current_step);
               setStepData(newData.step_data || {});
+              console.log('📡 Estado actualizado a:', newData.current_step);
             }
           }
         }
@@ -43,6 +46,7 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
 
     // Load initial state
     const loadInitialState = async () => {
+      console.log('🔍 Cargando estado inicial para:', { sessionId, workflowType });
       try {
         const { data, error } = await supabase
           .from('workflows')
@@ -52,18 +56,20 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
           .maybeSingle();
         
         if (error) {
-          console.error('Error loading workflow state:', error);
+          console.error('❌ Error loading workflow state:', error);
           return;
         }
         
+        console.log('🔍 Estado inicial encontrado:', data);
         if (data && data.current_step) {
           setCurrentStep(data.current_step);
           setStepData(data.step_data || {});
+          console.log('🔍 Estado establecido a:', data.current_step);
+        } else {
+          console.log('🔍 No se encontró workflow existente, usando estado por defecto: waiting');
         }
-        // If data is null (no workflow record exists yet), we keep the default state:
-        // currentStep='waiting' and stepData={}
       } catch (error) {
-        console.error('Unexpected error loading workflow state:', error);
+        console.error('❌ Unexpected error loading workflow state:', error);
       }
     };
 
