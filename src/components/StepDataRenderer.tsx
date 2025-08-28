@@ -20,7 +20,13 @@ const hasConfirmedAppointment = (data: any): boolean => {
 };
 
 const hasCallSummary = (data: any): boolean => {
-  return data && (data.call_duration || data.call_summary || data.termination_reason);
+  return data && (
+    data.call_termination || 
+    data.completion_details ||
+    data.call_duration || 
+    data.call_summary || 
+    data.termination_reason
+  );
 };
 
 const hasSimpleMessage = (data: any): boolean => {
