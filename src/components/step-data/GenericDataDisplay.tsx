@@ -1,5 +1,6 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface GenericDataDisplayProps {
   data: any;
@@ -74,18 +75,20 @@ export const GenericDataDisplay: React.FC<GenericDataDisplayProps> = ({ data, is
   }
 
   return (
-    <div className={`mt-3 ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
-      <div className="bg-card/50 rounded p-3 space-y-2">
-        <div className="text-xs font-medium mb-2">Datos del paso:</div>
-        <div className="space-y-1 text-sm">
-          {Object.entries(filteredData).map(([key, value]) => (
-            <div key={key} className="flex flex-col space-y-1">
-              <span className="font-medium text-xs">{key}:</span>
-              <div className="pl-2">{renderValue(value, key)}</div>
-            </div>
-          ))}
+    <Card className={`mt-3 ${isActive ? 'border-primary' : 'border-border/50'}`}>
+      <CardContent className="p-4">
+        <div className={`space-y-2 text-sm ${isActive ? 'text-primary' : 'text-foreground'}`}>
+          <div className="font-medium mb-2">Datos del paso:</div>
+          <div className="space-y-1">
+            {Object.entries(filteredData).map(([key, value]) => (
+              <div key={key} className="flex flex-col space-y-1">
+                <span className="font-medium">{key}:</span>
+                <div className="pl-2">{renderValue(value, key)}</div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

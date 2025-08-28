@@ -1,5 +1,6 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle, User, Phone, Calendar, Clock } from 'lucide-react';
 
 interface AppointmentConfirmationDisplayProps {
@@ -55,52 +56,54 @@ export const AppointmentConfirmationDisplay: React.FC<AppointmentConfirmationDis
   const serviceType = data.service_type || data.appointment?.service_type;
   
   return (
-    <div className={`mt-3 space-y-2 ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
-      <div className="flex items-center space-x-2">
-        <CheckCircle className="w-4 h-4 text-green-500" />
-        <span className="text-sm font-medium">Cita confirmada</span>
-      </div>
-      
-      <div className="bg-card/50 rounded p-3 space-y-2">
-        {confirmationNumber && (
-          <div className="text-xs">
-            <strong>Confirmación:</strong> #{confirmationNumber}
+    <Card className={`mt-3 ${isActive ? 'border-primary' : 'border-border/50'}`}>
+      <CardContent className="p-4">
+        <div className={`space-y-2 text-sm ${isActive ? 'text-primary' : 'text-foreground'}`}>
+          <div className="flex items-center space-x-2">
+            <CheckCircle className="w-4 h-4 text-green-500" />
+            <span className="font-medium">Cita confirmada</span>
           </div>
-        )}
-        
-        {appointment && (
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div className="flex items-center space-x-1">
-              <Calendar className="w-3 h-3" />
-              <span>{appointment.date}</span>
+          
+          {confirmationNumber && (
+            <div>
+              <strong>Confirmación:</strong> #{confirmationNumber}
             </div>
-            <div className="flex items-center space-x-1">
-              <Clock className="w-3 h-3" />
-              <span>{appointment.time}</span>
+          )}
+          
+          {appointment && (
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center space-x-1">
+                <Calendar className="w-3 h-3" />
+                <span>{appointment.date}</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Clock className="w-3 h-3" />
+                <span>{appointment.time}</span>
+              </div>
             </div>
-          </div>
-        )}
-        
-        {clientName && (
-          <div className="flex items-center space-x-1 text-sm">
-            <User className="w-3 h-3" />
-            <span>{clientName}</span>
-          </div>
-        )}
-        
-        {clientPhone && (
-          <div className="flex items-center space-x-1 text-sm">
-            <Phone className="w-3 h-3" />
-            <span>{clientPhone}</span>
-          </div>
-        )}
-        
-        {serviceType && (
-          <Badge variant="secondary" className="text-xs">
-            {serviceType}
-          </Badge>
-        )}
-      </div>
-    </div>
+          )}
+          
+          {clientName && (
+            <div className="flex items-center space-x-1">
+              <User className="w-3 h-3" />
+              <span>{clientName}</span>
+            </div>
+          )}
+          
+          {clientPhone && (
+            <div className="flex items-center space-x-1">
+              <Phone className="w-3 h-3" />
+              <span>{clientPhone}</span>
+            </div>
+          )}
+          
+          {serviceType && (
+            <Badge variant="secondary" className="text-xs">
+              {serviceType}
+            </Badge>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 };

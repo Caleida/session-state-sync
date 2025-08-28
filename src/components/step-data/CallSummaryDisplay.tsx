@@ -1,5 +1,6 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { Phone, Clock, MessageSquare } from 'lucide-react';
 
 interface CallSummaryDisplayProps {
@@ -42,63 +43,61 @@ export const CallSummaryDisplay: React.FC<CallSummaryDisplayProps> = ({ data, is
   const durationText = completionDetails?.duration;
 
   return (
-    <div className={`mt-3 space-y-2 ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
-      <div className="flex items-center space-x-2">
-        <Phone className="w-4 h-4" />
-        <span className="text-sm font-medium">Llamada finalizada</span>
-      </div>
-      
-      <div className="bg-card/50 rounded p-3 space-y-2">
-        {duration && (
-          <div className="flex items-center space-x-2 text-sm">
-            <Clock className="w-3 h-3" />
-            <span>Duración: {formatDuration(duration)}</span>
+    <Card className={`mt-3 ${isActive ? 'border-primary' : 'border-border/50'}`}>
+      <CardContent className="p-4">
+        <div className={`space-y-2 text-sm ${isActive ? 'text-primary' : 'text-foreground'}`}>
+          <div className="flex items-center space-x-2">
+            <Phone className="w-4 h-4" />
+            <span className="font-medium">Llamada finalizada</span>
           </div>
-        )}
-        
-        {durationText && durationText !== "Not specified" && !duration && (
-          <div className="flex items-center space-x-2 text-sm">
-            <Clock className="w-3 h-3" />
-            <span>Duración: {durationText}</span>
-          </div>
-        )}
-        
-        {reason && (
-          <div className="text-sm">
-            <Badge variant="outline" className="text-xs">
-              {reason}
-            </Badge>
-          </div>
-        )}
-        
-        {message && (
-          <div className="text-sm">
+          
+          {duration && (
+            <div className="flex items-center space-x-2">
+              <Clock className="w-3 h-3" />
+              <span>Duración: {formatDuration(duration)}</span>
+            </div>
+          )}
+          
+          {durationText && durationText !== "Not specified" && !duration && (
+            <div className="flex items-center space-x-2">
+              <Clock className="w-3 h-3" />
+              <span>Duración: {durationText}</span>
+            </div>
+          )}
+          
+          {reason && (
+            <div>
+              <Badge variant="outline" className="text-xs">
+                {reason}
+              </Badge>
+            </div>
+          )}
+          
+          {message && (
             <div className="flex items-start space-x-2">
               <MessageSquare className="w-3 h-3 mt-0.5 flex-shrink-0" />
               <div>
-                <div className="font-medium text-xs mb-1">Estado:</div>
-                <div className="text-xs text-muted-foreground">
+                <div className="font-medium mb-1">Estado:</div>
+                <div className="text-muted-foreground">
                   {message}
                 </div>
               </div>
             </div>
-          </div>
-        )}
-        
-        {summary && (
-          <div className="text-sm">
+          )}
+          
+          {summary && (
             <div className="flex items-start space-x-2">
               <MessageSquare className="w-3 h-3 mt-0.5 flex-shrink-0" />
               <div>
-                <div className="font-medium text-xs mb-1">Resumen:</div>
-                <div className="text-xs text-muted-foreground">
+                <div className="font-medium mb-1">Resumen:</div>
+                <div className="text-muted-foreground">
                   {summary}
                 </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
-    </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
