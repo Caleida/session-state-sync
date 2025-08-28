@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, ArrowDown } from 'lucide-react';
 import { useWorkflowConfig } from '@/hooks/useWorkflowConfig';
+import { StepDataRenderer } from './StepDataRenderer';
 
 interface WorkflowVisualizationProps {
   sessionId: string;
@@ -13,6 +14,7 @@ interface WorkflowVisualizationProps {
 export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ sessionId, workflowType }) => {
   const [currentStep, setCurrentStep] = useState<string>('waiting');
   const [stepData, setStepData] = useState<any>({});
+  const [allStepsData, setAllStepsData] = useState<Record<string, any>>({});
   const { config, agentId, loading, error } = useWorkflowConfig(workflowType);
 
   useEffect(() => {
@@ -39,6 +41,8 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
           console.log('🔄 Estado cargado manualmente:', data.current_step);
           setCurrentStep(data.current_step);
           setStepData(data.step_data || {});
+          // Store step data for current step
+          setAllStepsData(prev => ({ ...prev, [data.current_step]: data.step_data || {} }));
         }
       } catch (error) {
         console.error('❌ Error loading state:', error);
@@ -69,6 +73,8 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
                 console.log('✅ Actualizando estado via realtime:', newData.current_step);
                 setCurrentStep(newData.current_step);
                 setStepData(newData.step_data || {});
+                // Store step data for current step
+                setAllStepsData(prev => ({ ...prev, [newData.current_step]: newData.step_data || {} }));
               }
             }
           }
@@ -190,9 +196,11 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
                         {step.name}
                       </h3>
                       <p className="text-sm text-muted-foreground">{step.description}</p>
-                      {isActive && stepData.message && (
-                        <p className="text-sm text-primary mt-1">{stepData.message}</p>
-                      )}
+                      <StepDataRenderer 
+                        stepData={isActive ? stepData : allStepsData[stepId]}
+                        stepId={stepId}
+                        isActive={isActive}
+                      />
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
