@@ -3,10 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from '@/components/ui/breadcrumb';
 import { WorkflowVisualization } from '@/components/WorkflowVisualization';
 import { WorkflowSimulator } from '@/components/WorkflowSimulator';
 import { useWorkflowConfig } from '@/hooks/useWorkflowConfig';
-import { Mail, Play, ArrowLeft } from 'lucide-react';
+import { Mail, Play, ArrowLeft, Home } from 'lucide-react';
 
 const WorkflowDemo = () => {
   const { workflowType } = useParams<{ workflowType: string }>();
@@ -144,7 +145,28 @@ const WorkflowDemo = () => {
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex justify-end items-center">
+        <div className="flex justify-between items-center">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink onClick={() => navigate('/')} className="cursor-pointer flex items-center">
+                  <Home className="w-4 h-4 mr-1" />
+                  Inicio
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Workflows</BreadcrumbPage>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage className="font-medium">
+                  {config?.name || workflowType}
+                </BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+          
           <div className="flex space-x-2">
             <Button variant="outline" onClick={() => navigate('/')}>
               <ArrowLeft className="w-4 h-4 mr-2" />
