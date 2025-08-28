@@ -48,7 +48,6 @@ export type Database = {
         Row: {
           created_at: string
           current_step: string
-          email: string | null
           id: string
           session_id: string
           step_data: Json | null
@@ -58,7 +57,6 @@ export type Database = {
         Insert: {
           created_at?: string
           current_step?: string
-          email?: string | null
           id?: string
           session_id: string
           step_data?: Json | null
@@ -68,7 +66,6 @@ export type Database = {
         Update: {
           created_at?: string
           current_step?: string
-          email?: string | null
           id?: string
           session_id?: string
           step_data?: Json | null

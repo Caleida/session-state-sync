@@ -175,7 +175,7 @@ const WorkflowDemo = () => {
               <div dangerouslySetInnerHTML={{
                 __html: `<elevenlabs-convai
                            agent-id="${agentId}"
-                           dynamic-variables='{"session_id": "${sessionId}"}'
+                           dynamic-variables='{"session_id": "${sessionId}", "workflow_type": "${workflowType}"}'
                          ></elevenlabs-convai>`
               }} />
             )}
