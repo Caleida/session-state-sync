@@ -14,12 +14,12 @@ serve(async (req) => {
   }
 
   try {
-    const { session_id } = await req.json();
+    const { session_id, phone_number } = await req.json();
     
-    if (!session_id) {
-      console.error('Missing session_id parameter');
+    if (!session_id || !phone_number) {
+      console.error('Missing required parameters');
       return new Response(
-        JSON.stringify({ error: 'session_id is required' }), 
+        JSON.stringify({ error: 'session_id and phone_number are required' }), 
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -29,7 +29,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log('Processing SMS confirmation for session:', session_id);
+    console.log('Processing SMS confirmation for session:', session_id, 'to phone:', phone_number);
 
     // Find the workflow
     const { data: workflow, error: fetchError } = await supabase
@@ -37,46 +37,35 @@ serve(async (req) => {
       .select('*')
       .eq('session_id', session_id)
       .eq('workflow_type', 'booking')
-      .single();
+      .maybeSingle();
 
-    if (fetchError || !workflow) {
-      console.error('Workflow not found:', fetchError);
+    if (fetchError) {
+      console.error('Error fetching workflow:', fetchError);
+      return new Response(
+        JSON.stringify({ error: 'Error fetching workflow' }), 
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!workflow) {
+      console.error('Workflow not found for session:', session_id);
       return new Response(
         JSON.stringify({ error: 'Workflow not found' }), 
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Check if workflow is in the correct step
-    if (workflow.current_step !== 'appointment_confirmed') {
-      console.error('Invalid workflow step. Current:', workflow.current_step, 'Expected: appointment_confirmed');
-      return new Response(
-        JSON.stringify({ error: 'Workflow must be in appointment_confirmed step' }), 
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Extract appointment data
-    const appointmentData = workflow.step_data?.appointment;
-    if (!appointmentData) {
-      console.error('No appointment data found in workflow');
-      return new Response(
-        JSON.stringify({ error: 'No appointment data found' }), 
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     // Simulate SMS sending (no real SMS)
     const simulatedSMSData = {
       sms_confirmation: {
-        sent_to: appointmentData.client_phone,
+        sent_to: phone_number,
         sent_at: new Date().toISOString(),
-        message: `Cita confirmada para ${appointmentData.appointment_date} a las ${appointmentData.appointment_time}. Confirmación: #${appointmentData.confirmation_number}`,
+        message: `Su cita ha sido confirmada. SMS enviado a ${phone_number}`,
         status: 'sent',
         delivery_status: 'delivered'
       },
-      // Keep existing appointment data
-      appointment: appointmentData
+      // Keep existing step data
+      ...workflow.step_data
     };
 
     // Update workflow to sms_confirmation_sent step
@@ -89,7 +78,7 @@ serve(async (req) => {
       })
       .eq('id', workflow.id)
       .select()
-      .single();
+      .maybeSingle();
 
     if (updateError) {
       console.error('Error updating workflow:', updateError);
