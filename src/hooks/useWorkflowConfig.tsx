@@ -7,6 +7,7 @@ interface WorkflowStep {
   name: string;
   description: string;
   icon: React.ReactNode;
+  iconName: string;
   actor: 'user' | 'beyond';
 }
 
