@@ -54,19 +54,34 @@ serve(async (req) => {
       throw new Error('session_id, email, and workflow_type are required parameters');
     }
 
-    // Validate workflow_type against known types
-    const validWorkflowTypes = ['appointments', 'consultations', 'support', 'sales', 'general'];
+    // Initialize Supabase client first for validation
+    const supabase = createClient(
+      'https://uoskbpqmlvgrwoqosnew.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvc2ticHFtbHZncndvcW9zbmV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMzNDgzMDgsImV4cCI6MjA2ODkyNDMwOH0.iyK012ElyB_SHOczPRbQcUbon0oV6yYqXs6htmuKv2M'
+    );
+
+    // Get valid workflow types from database
+    const { data: workflowDefinitions, error: workflowError } = await supabase
+      .from('workflow_definitions')
+      .select('workflow_type');
+
+    if (workflowError) {
+      console.error('Error fetching workflow definitions:', workflowError);
+      throw new Error('Failed to validate workflow type');
+    }
+
+    const validWorkflowTypes = workflowDefinitions?.map(def => def.workflow_type) || [];
+    
+    if (validWorkflowTypes.length === 0) {
+      throw new Error('No workflow types found in database');
+    }
+
+    // Validate workflow_type against database types
     if (!validWorkflowTypes.includes(workflow_type)) {
       throw new Error(`Invalid workflow_type: ${workflow_type}. Valid types: ${validWorkflowTypes.join(', ')}`);
     }
 
     console.log(`Processing call end notification for workflow type: ${workflow_type}`);
-
-    // Initialize Supabase client
-    const supabase = createClient(
-      'https://uoskbpqmlvgrwoqosnew.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvc2ticHFtbHZncndvcW9zbmV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMzNDgzMDgsImV4cCI6MjA2ODkyNDMwOH0.iyK012ElyB_SHOczPRbQcUbon0oV6yYqXs6htmuKv2M'
-    );
 
     // Create call termination data
     const callEndData = {
