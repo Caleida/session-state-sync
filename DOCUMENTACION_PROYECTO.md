@@ -780,71 +780,121 @@ useEffect(() => {
 
 ### Crear un Nuevo Workflow
 
-#### 1. Preparación
-```bash
-# 1. Crear entrada en BD (puedes usar SQL directo o migración)
-# 2. Configurar agente ElevenLabs con tools necesarias
-# 3. Determinar si necesitas edge functions específicas
-# 4. Determinar si necesitas display components personalizados
+#### 1. Análisis y Planificación
+Antes de implementar, define claramente:
+
+```
+• ¿Cuál es el objetivo del workflow?
+• ¿Qué pasos específicos necesita?
+• ¿Qué información debe recopilar en cada paso?  
+• ¿Qué Edge Functions necesitará crear?
+• ¿Qué Display Components personalizados requiere?
+• ¿Qué herramientas (tools) necesitará el agente ElevenLabs?
 ```
 
-#### 2. Insertar Configuración
+**Ejemplo de planificación para workflow "soporte_tecnico":**
+```
+Pasos del workflow:
+1. waiting → Esperando llamada
+2. call_started → Llamada iniciada  
+3. problem_identification → Identificando problema técnico
+4. diagnostic_running → Ejecutando diagnóstico
+5. solution_provided → Solución proporcionada
+6. call_ended → Llamada finalizada
+
+Edge Functions necesarias:
+- identify-technical-problem (analizar descripción del problema)
+- run-diagnostic (ejecutar diagnóstico automático)  
+- provide-solution (buscar y proporcionar solución)
+
+Display Components necesarios:
+- TechnicalProblemDisplay (mostrar problema identificado)
+- DiagnosticResultsDisplay (mostrar resultados de diagnóstico)
+- SolutionDisplay (mostrar solución paso a paso)
+
+Tools para ElevenLabs:
+- identify_technical_problem
+- run_diagnostic  
+- provide_solution
+- notify_call_started
+- notify_call_ended
+```
+
+#### 2. Crear Configuración en Base de Datos
+Inserta la definición del workflow (inicialmente sin agent_id):
 ```sql
 INSERT INTO public.workflow_definitions (
     workflow_type,
     name,
     description, 
-    agent_id,
+    agent_id,  -- Dejarlo NULL inicialmente
     steps_config
 ) VALUES (
-    'mi_workflow',
-    'Mi Workflow Personalizado',
-    'Descripción detallada del workflow',
-    'elevenlabs-agent-id-123',
+    'soporte_tecnico',
+    'Soporte Técnico Automatizado',
+    'Workflow para resolver problemas técnicos de usuarios',
+    NULL,  -- Se actualizará después de crear el agente
     '{
         "steps": {
             "waiting": {
                 "id": "waiting",
-                "name": "Esperando Inicio",
-                "description": "Sistema esperando interacción",
+                "name": "Esperando Llamada",
+                "description": "Sistema esperando llamada de soporte",
                 "icon": "clock",
                 "actor": "system"
             },
-            "paso_1": {
-                "id": "paso_1", 
-                "name": "Paso Inicial",
-                "description": "Primer paso del proceso",
+            "call_started": {
+                "id": "call_started", 
+                "name": "Llamada Iniciada",
+                "description": "Usuario ha iniciado llamada de soporte",
                 "icon": "phone",
                 "actor": "user"
             },
-            "paso_2": {
-                "id": "paso_2",
-                "name": "Procesamiento", 
-                "description": "Procesando información",
+            "problem_identification": {
+                "id": "problem_identification",
+                "name": "Identificando Problema", 
+                "description": "Analizando descripción del problema técnico",
                 "icon": "search",
                 "actor": "beyond"
             },
-            "completado": {
-                "id": "completado",
-                "name": "Completado",
-                "description": "Proceso finalizado exitosamente", 
+            "diagnostic_running": {
+                "id": "diagnostic_running",
+                "name": "Ejecutando Diagnóstico",
+                "description": "Corriendo diagnóstico automático", 
+                "icon": "settings",
+                "actor": "beyond"
+            },
+            "solution_provided": {
+                "id": "solution_provided",
+                "name": "Solución Proporcionada",
+                "description": "Solución técnica entregada al usuario", 
                 "icon": "check-circle",
+                "actor": "beyond"
+            },
+            "call_ended": {
+                "id": "call_ended",
+                "name": "Llamada Finalizada",
+                "description": "Soporte técnico completado", 
+                "icon": "phone-off",
                 "actor": "system"
             }
         },
-        "step_order": ["waiting", "paso_1", "paso_2", "completado"],
+        "step_order": ["waiting", "call_started", "problem_identification", "diagnostic_running", "solution_provided", "call_ended"],
         "simulation_messages": {
-            "paso_1": "Iniciando proceso personalizado...",
-            "paso_2": "Procesando información del cliente...", 
-            "completado": "Proceso completado exitosamente"
+            "call_started": "Iniciando llamada de soporte técnico...",
+            "problem_identification": "Analizando problema reportado por el usuario...",
+            "diagnostic_running": "Ejecutando diagnóstico automático del sistema...",
+            "solution_provided": "Proporcionando solución técnica personalizada...",
+            "call_ended": "Soporte técnico completado exitosamente"
         }
     }'::jsonb
 );
 ```
 
-#### 3. Crear Edge Functions (si necesario)
+#### 3. Crear Edge Functions (Tools para el Agente)
+Las Edge Functions se convierten en las **herramientas (tools)** que podrá usar el agente ElevenLabs:
 ```typescript
-// supabase/functions/mi-workflow-action/index.ts
+// supabase/functions/identify-technical-problem/index.ts
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.52.1';
 
@@ -859,10 +909,14 @@ serve(async (req) => {
     }
 
     try {
-        const { session_id, workflow_type, custom_param } = await req.json();
+        const { session_id, workflow_type, problem_description, user_device } = await req.json();
         
         if (!session_id || !workflow_type) {
-            throw new Error('Parámetros requeridos faltantes');
+            throw new Error('session_id y workflow_type son requeridos');
+        }
+        
+        if (!problem_description) {
+            throw new Error('problem_description es requerido');
         }
 
         const supabase = createClient(
@@ -870,11 +924,15 @@ serve(async (req) => {
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvc2ticHFtbHZncndvcW9zbmV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMzNDgzMDgsImV4cCI6MjA2ODkyNDMwOH0.iyK012ElyB_SHOczPRbQcUbon0oV6yYqXs6htmuKv2M"
         );
 
-        // Tu lógica específica aquí
+        // Analizar el problema (aquí podrías integrar IA para categorizar)
         const stepData = {
-            procesado: true,
-            timestamp: new Date().toISOString(),
-            custom_param
+            technical_problem: {
+                description: problem_description,
+                device: user_device || 'No especificado',
+                category: analyzeProbleCategory(problem_description), // Función helper
+                severity: 'medium',
+                identified_at: new Date().toISOString()
+            }
         };
 
         const { error } = await supabase
@@ -882,7 +940,7 @@ serve(async (req) => {
             .upsert({
                 session_id,
                 workflow_type,
-                current_step: 'paso_2',
+                current_step: 'problem_identification',
                 step_data: stepData
             });
 
@@ -890,8 +948,8 @@ serve(async (req) => {
 
         return new Response(JSON.stringify({
             success: true,
-            message: 'Acción ejecutada exitosamente',
-            data: stepData
+            message: 'Problema técnico identificado exitosamente',
+            problem_analysis: stepData.technical_problem
         }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
@@ -908,55 +966,59 @@ serve(async (req) => {
 });
 ```
 
-#### 4. Crear Display Components (si necesario)
+#### 4. Crear Display Components Personalizados
 ```tsx
-// src/components/step-data/MiWorkflowDisplay.tsx
+// src/components/step-data/TechnicalProblemDisplay.tsx
 import React from 'react';
-import { CheckCircle, Clock } from 'lucide-react';
+import { AlertCircle, Monitor, Clock } from 'lucide-react';
 
-interface MiWorkflowDisplayProps {
+interface TechnicalProblemDisplayProps {
     data: any;
     isActive: boolean;
 }
 
-export const MiWorkflowDisplay: React.FC<MiWorkflowDisplayProps> = ({ data, isActive }) => {
-    if (!data || !data.procesado) return null;
+export const TechnicalProblemDisplay: React.FC<TechnicalProblemDisplayProps> = ({ data, isActive }) => {
+    const problem = data?.technical_problem;
+    if (!problem) return null;
 
     return (
         <div className={`mt-2 p-3 rounded-lg border ${
             isActive ? 'border-primary bg-primary/5 animate-pulse' : 'border-muted bg-muted/50'
         }`}>
             <div className="flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span className="font-medium">Procesamiento Completado</span>
+                <AlertCircle className="w-4 h-4 text-orange-500" />
+                <span className="font-medium">Problema Identificado</span>
             </div>
-            <div className="mt-2 text-sm text-muted-foreground">
-                <p>Procesado: {data.timestamp}</p>
-                {data.custom_param && <p>Parámetro: {data.custom_param}</p>}
+            <div className="mt-2 space-y-1 text-sm text-muted-foreground">
+                <p><strong>Descripción:</strong> {problem.description}</p>
+                <p><Monitor className="w-3 h-3 inline mr-1" /><strong>Dispositivo:</strong> {problem.device}</p>
+                <p><strong>Categoría:</strong> {problem.category}</p>
+                <p><strong>Severidad:</strong> {problem.severity}</p>
+                <p><Clock className="w-3 h-3 inline mr-1" />Identificado: {new Date(problem.identified_at).toLocaleString()}</p>
             </div>
         </div>
     );
 };
 ```
 
-#### 5. Integrar Display Component
+#### 5. Integrar Display Components en StepDataRenderer
 ```tsx
 // src/components/StepDataRenderer.tsx
 
 // 1. Importar el nuevo componente
-import { MiWorkflowDisplay } from './step-data/MiWorkflowDisplay';
+import { TechnicalProblemDisplay } from './step-data/TechnicalProblemDisplay';
 
 // 2. Crear función de detección
-const hasMiWorkflowData = (data: any): boolean => {
-    return data && data.procesado === true;
+const hasTechnicalProblem = (data: any): boolean => {
+    return data && data.technical_problem && data.technical_problem.description;
 };
 
 // 3. Agregar al renderizador (en orden de prioridad)
 export const StepDataRenderer: React.FC<StepDataRendererProps> = ({ stepData, stepId, isActive }) => {
-    // ... otras detecciones
+    // ... otras detecciones customer support (máxima prioridad)
     
-    if (hasMiWorkflowData(stepData)) {
-        return <MiWorkflowDisplay data={stepData} isActive={isActive} />;
+    if (hasTechnicalProblem(stepData)) {
+        return <TechnicalProblemDisplay data={stepData} isActive={isActive} />;
     }
     
     // ... resto de detecciones
@@ -964,22 +1026,109 @@ export const StepDataRenderer: React.FC<StepDataRendererProps> = ({ stepData, st
 ```
 
 #### 6. Actualizar supabase/config.toml
+Registra todas las Edge Functions que creaste:
 ```toml
-[functions.mi-workflow-action]
+[functions.identify-technical-problem]
+verify_jwt = false
+
+[functions.run-diagnostic]
+verify_jwt = false
+
+[functions.provide-solution]
 verify_jwt = false
 ```
 
-#### 7. Configurar Agente ElevenLabs
-En el dashboard de ElevenLabs:
-- **Agent ID**: Copiar del dashboard
-- **Tools**: Agregar `mi_workflow_action` con parámetros apropiados
-- **Prompt**: Incluir variables dinámicas `{{session_id}}` y `{{workflow_type}}`
+#### 7. Crear Agente ElevenLabs
+En el dashboard de ElevenLabs (https://elevenlabs.io/):
 
-#### 8. Probar el Workflow
-1. Navegar a `/workflow/mi_workflow`
+**Paso 7.1: Crear Agente**
+- Ir a "Conversational AI" → "Agents" 
+- Crear nuevo agente
+- Seleccionar voz apropiada (ej: Sarah - EXAVITQu4vr4xnSDxMaL)
+- Copiar el Agent ID generado
+
+**Paso 7.2: Configurar Tools**
+Agregar cada Edge Function como tool:
+```json
+Tool Name: identify_technical_problem
+Parameters:
+- session_id (string, required): Session identifier
+- workflow_type (string, required): Workflow type  
+- problem_description (string, required): User's problem description
+- user_device (string, optional): User's device information
+
+Tool Name: run_diagnostic  
+Parameters:
+- session_id (string, required): Session identifier
+- workflow_type (string, required): Workflow type
+- diagnostic_type (string, required): Type of diagnostic to run
+
+Tool Name: provide_solution
+Parameters:
+- session_id (string, required): Session identifier  
+- workflow_type (string, required): Workflow type
+- solution_type (string, required): Type of solution needed
+```
+
+**Paso 7.3: Crear Prompt Especializado**
+```
+Eres Carlos, un especialista en soporte técnico altamente capacitado.
+
+Tu misión es ayudar a los usuarios a resolver problemas técnicos de manera eficiente, diagnosticando automáticamente sus problemas y proporcionando soluciones paso a paso.
+
+Usa las tools disponibles de manera inteligente.
+
+Da respuestas claras, técnicas pero comprensibles. Sé paciente y profesional.
+
+Al recibir una llamada, utiliza inmediatamente la tool notify_call_started para registrar el inicio de la sesión.
+
+Cuando el usuario describa su problema técnico, usa la tool identify_technical_problem con la descripción detallada y información del dispositivo si está disponible.
+
+Una vez identificado el problema, usa la tool run_diagnostic para ejecutar un diagnóstico automático apropiado para el tipo de problema detectado.
+
+Después del diagnóstico, usa la tool provide_solution para generar una solución personalizada paso a paso.
+
+IMPORTANTE: En TODAS las llamadas a herramientas externas, SIEMPRE incluye los siguientes parámetros para mantener el contexto:  
+- session_id con el valor {{session_id}} 
+- workflow_type con el valor {{workflow_type}}
+
+IMPORTANTE: Al finalizar la conversación, SIEMPRE llama a la herramienta notify_call_ended para registrar que la sesión ha terminado.
+
+La hora y día actual es: {{system__timezone}}
+```
+
+#### 8. Actualizar Base de Datos con Agent ID
+Una vez creado el agente, actualiza la fila en workflow_definitions:
+
+```sql
+UPDATE public.workflow_definitions 
+SET agent_id = 'elevenlabs-agent-id-aqui'  -- El ID real del agente creado
+WHERE workflow_type = 'soporte_tecnico';
+```
+
+#### 9. Probar el Workflow
+1. Navegar a `/workflow/soporte_tecnico`
 2. Iniciar sesión
-3. Probar simulación manual
-4. Probar integración con ElevenLabs
+3. Probar simulación manual con los botones del simulador
+4. Probar integración completa con ElevenLabs:
+   - Iniciar conversación con el agente
+   - Describir un problema técnico
+   - Verificar que se ejecutan las tools correctamente
+   - Confirmar que los datos se visualizan apropiadamente
+
+### Resumen del Orden Correcto
+
+**El orden correcto para crear un workflow es:**
+
+1. **Análisis y Planificación** - Definir pasos, herramientas y necesidades
+2. **Crear Configuración en BD** - Insertar workflow_definitions (sin agent_id)
+3. **Crear Edge Functions** - Implementar la lógica de cada tool
+4. **Crear Display Components** - Componentes de visualización personalizados
+5. **Integrar Display Components** - Agregar al StepDataRenderer
+6. **Actualizar config.toml** - Registrar las Edge Functions
+7. **Crear Agente ElevenLabs** - Con tools y prompt especializado
+8. **Actualizar BD con Agent ID** - Vincular agente con workflow
+9. **Probar Workflow Completo** - Verificar funcionamiento end-to-end
 
 ### Debugging
 
