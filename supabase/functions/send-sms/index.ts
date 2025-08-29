@@ -14,21 +14,14 @@ serve(async (req) => {
   }
 
   try {
-    const { session_id, phone_number, workflow_type } = await req.json();
+    const { session_id, phone_number } = await req.json();
+    const workflow_type = 'order_management'; // Hardcoded for this workflow
     console.log('SMS request for session:', session_id, 'workflow:', workflow_type, 'phone:', phone_number);
     
-    if (!session_id || !phone_number || !workflow_type) {
+    if (!session_id || !phone_number) {
       console.error('Missing required parameters');
       return new Response(
-        JSON.stringify({ error: 'session_id, phone_number and workflow_type are required' }), 
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Validate workflow_type
-    if (!['booking', 'delivery_change', 'order_management'].includes(workflow_type)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid workflow_type. Must be "booking", "delivery_change", or "order_management"' }), 
+        JSON.stringify({ error: 'session_id and phone_number are required' }), 
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -41,24 +34,8 @@ serve(async (req) => {
     console.log('Processing SMS for session:', session_id, 'to phone:', phone_number, 'workflow:', workflow_type);
 
     // Generate message and current_step based on workflow_type
-    let message: string;
-    let currentStep: string;
-
-    if (workflow_type === 'booking') {
-      message = `Su cita ha sido confirmada. SMS enviado a ${phone_number}`;
-      currentStep = 'sms_confirmation_sent';
-    } else if (workflow_type === 'delivery_change') {
-      message = `Tu entrega ha sido reagendada exitosamente. SMS enviado a ${phone_number}`;
-      currentStep = 'sms_sent';
-    } else if (workflow_type === 'order_management') {
-      message = `Su pedido de pizzería ha sido procesado exitosamente. Tiempo estimado de entrega: 30-40 min. ¡Gracias por su preferencia! SMS enviado a ${phone_number}`;
-      currentStep = 'sms_sent';
-    } else {
-      return new Response(
-        JSON.stringify({ error: 'Invalid workflow_type. Must be "booking", "delivery_change", or "order_management"' }), 
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const message = `Su pedido de pizzería ha sido procesado exitosamente. Tiempo estimado de entrega: 30-40 min. ¡Gracias por su preferencia! SMS enviado a ${phone_number}`;
+    const currentStep = 'sms_sent';
 
     // Simulate SMS sending (no real SMS)
     const simulatedSMSData = {

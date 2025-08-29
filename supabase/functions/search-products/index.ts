@@ -13,25 +13,15 @@ serve(async (req) => {
   }
 
   try {
-    const { session_id, current_step, category, workflow_type } = await req.json();
+    const { session_id, category } = await req.json();
+    const workflow_type = 'order_management'; // Hardcoded for this workflow
     console.log('Searching products for session:', session_id, 'workflow:', workflow_type, 'category:', category);
 
     // Validate required parameters
-    if (!session_id || !workflow_type) {
+    if (!session_id) {
       return new Response(JSON.stringify({
         success: false,
-        error: 'Faltan parámetros requeridos: session_id, workflow_type'
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Validate workflow_type
-    if (workflow_type !== 'order_management') {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Tipo de workflow no válido para búsqueda de productos'
+        error: 'Faltan parámetros requeridos: session_id'
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
