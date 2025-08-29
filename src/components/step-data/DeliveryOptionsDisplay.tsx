@@ -37,7 +37,7 @@ export const DeliveryOptionsDisplay: React.FC<DeliveryOptionsDisplayProps> = ({
   };
 
   const getSlotTypeLabel = (slotType: string) => {
-    return slotType === 'morning' ? 'Mañana' : 'Tarde';
+    return slotType === 'mañana' ? 'Mañana' : 'Tarde';
   };
 
   return (
