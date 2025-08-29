@@ -8,6 +8,9 @@ import { GenericDataDisplay } from './step-data/GenericDataDisplay';
 import { PackageInfoDisplay } from './step-data/PackageInfoDisplay';
 import { DeliveryOptionsDisplay } from './step-data/DeliveryOptionsDisplay';
 import { DeliveryChangeConfirmationDisplay } from './step-data/DeliveryChangeConfirmationDisplay';
+import { ProductCatalogDisplay } from './step-data/ProductCatalogDisplay';
+import { OrderSummaryDisplay } from './step-data/OrderSummaryDisplay';
+import { OrderConfirmationDisplay } from './step-data/OrderConfirmationDisplay';
 
 interface StepDataRendererProps {
   stepData: any;
@@ -67,6 +70,24 @@ const hasDeliveryChangeConfirmation = (data: any): boolean => {
   return data && data.confirmed_change && data.confirmed_change.confirmation_number;
 };
 
+// Pizzeria order management detection functions
+const hasProductCatalog = (data: any): boolean => {
+  return data && typeof data === 'object' && 
+         (data.pizzas || data.beverages || data.promotions);
+};
+
+const hasOrderSummary = (data: any): boolean => {
+  return data && typeof data === 'object' && 
+         data.order_items && Array.isArray(data.order_items) &&
+         (data.subtotal !== undefined || data.total !== undefined);
+};
+
+const hasOrderConfirmation = (data: any): boolean => {
+  return data && typeof data === 'object' && 
+         data.order_number && 
+         data.status === 'confirmed';
+};
+
 const hasGenericData = (data: any): boolean => {
   return data && typeof data === 'object' && Object.keys(data).length > 0;
 };
@@ -112,6 +133,19 @@ export const StepDataRenderer: React.FC<StepDataRendererProps> = ({
 
   if (hasCallSummary(stepData)) {
     return <CallSummaryDisplay data={stepData} isActive={isActive} />;
+  }
+
+  // Pizzeria order management displays
+  if (hasProductCatalog(stepData)) {
+    return <ProductCatalogDisplay stepData={stepData} />;
+  }
+
+  if (hasOrderSummary(stepData)) {
+    return <OrderSummaryDisplay stepData={stepData} />;
+  }
+
+  if (hasOrderConfirmation(stepData)) {
+    return <OrderConfirmationDisplay stepData={stepData} />;
   }
 
   if (hasSimpleMessage(stepData)) {
