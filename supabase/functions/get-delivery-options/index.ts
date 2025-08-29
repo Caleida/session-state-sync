@@ -14,8 +14,19 @@ serve(async (req) => {
   try {
     console.log('Get delivery options request received');
     
-    const { session_id } = await req.json();
+    const { 
+      session_id, 
+      current_step, 
+      preferred_date, 
+      preferred_time 
+    } = await req.json();
     const workflow_type = 'delivery_change';
+    
+    console.log('Request data:', { session_id, current_step, preferred_date, preferred_time, workflow_type });
+    
+    if (!session_id) {
+      throw new Error('session_id is required');
+    }
     
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -24,15 +35,23 @@ serve(async (req) => {
     const deliveryOptions = [];
     const currentDate = new Date();
     
+    // Personalize based on preferred_date
+    const preferredDateObj = preferred_date ? new Date(preferred_date) : null;
+    const startDate = preferredDateObj && preferredDateObj > currentDate ? preferredDateObj : currentDate;
+    
     for (let i = 1; i <= 7; i++) {
-      const date = new Date(currentDate);
-      date.setDate(currentDate.getDate() + i);
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
       
       if (date.getDay() === 0 || date.getDay() === 6) continue;
       
       const dateStr = date.toISOString().split('T')[0];
       
-      if (Math.random() > 0.3) {
+      // Higher probability for preferred time slot
+      const morningProbability = preferred_time === 'morning' ? 0.8 : 0.7;
+      const afternoonProbability = preferred_time === 'afternoon' ? 0.8 : 0.8;
+      
+      if (Math.random() < morningProbability) {
         deliveryOptions.push({
           option_id: `${dateStr}_morning`,
           date: dateStr,
@@ -43,7 +62,7 @@ serve(async (req) => {
         });
       }
       
-      if (Math.random() > 0.2) {
+      if (Math.random() < afternoonProbability) {
         deliveryOptions.push({
           option_id: `${dateStr}_afternoon`,
           date: dateStr,
@@ -60,8 +79,13 @@ serve(async (req) => {
     const deliveryOptionsData = {
       available_options: availableOptions,
       original_date: "2025-08-30",
-      options_generated_at: new Date().toISOString(),
-      total_options: availableOptions.length
+      searched_at: new Date().toISOString(),
+      total_options: availableOptions.length,
+      search_criteria: {
+        preferred_date: preferred_date || null,
+        preferred_time: preferred_time || null,
+        current_step: current_step || null
+      }
     };
 
     const { error: upsertError } = await supabase
@@ -79,14 +103,24 @@ serve(async (req) => {
     if (upsertError) {
       console.error('Error updating workflow:', upsertError);
       return new Response(
-        JSON.stringify({ error: 'Failed to update workflow' }), 
+        JSON.stringify({ 
+          success: false,
+          error: 'Failed to update workflow',
+          message: 'Error al actualizar el flujo de trabajo' 
+        }), 
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    const message = availableOptions.length > 0 
+      ? `Encontré ${availableOptions.length} opciones de entrega disponibles${preferred_date ? ` cerca de tu fecha preferida` : ''}${preferred_time ? ` en horario ${preferred_time === 'morning' ? 'matutino' : 'vespertino'}` : ''}`
+      : 'No se encontraron opciones de entrega disponibles';
+
     return new Response(
       JSON.stringify({ 
         success: true,
+        message,
+        session_id,
         next_step: 'showing_options',
         available_options: availableOptions
       }), 
@@ -96,7 +130,11 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in get-delivery-options function:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }), 
+      JSON.stringify({ 
+        success: false,
+        error: error.message || 'Unknown error',
+        message: 'Error interno del servidor al buscar opciones de entrega'
+      }), 
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
