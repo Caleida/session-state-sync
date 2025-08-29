@@ -24,58 +24,61 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Generate delivery options for next 7 days
+    // Generate delivery options for next 7 days, excluding weekends
     const deliveryOptions = [];
-    const today = new Date();
+    const currentDate = new Date();
     
     for (let i = 1; i <= 7; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
+      const date = new Date(currentDate);
+      date.setDate(currentDate.getDate() + i);
       
       // Skip weekends
       if (date.getDay() === 0 || date.getDay() === 6) continue;
       
       const dateStr = date.toISOString().split('T')[0];
       
-      // Add morning and afternoon slots
-      deliveryOptions.push(
-        {
-          id: `${dateStr}_morning`,
+      // Morning slot
+      const morningAvailable = Math.random() > 0.3;
+      if (morningAvailable) {
+        deliveryOptions.push({
+          option_id: `${dateStr}_morning`,
           date: dateStr,
-          time_slot: "09:00 - 13:00",
-          display_date: date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }),
-          display_time: "Mañana (09:00 - 13:00)",
-          available: Math.random() > 0.3, // 70% availability
-          cost: "Gratuito"
-        },
-        {
-          id: `${dateStr}_afternoon`, 
+          time_slot: "09:00-14:00",
+          slot_type: "morning",
+          available: true,
+          price_adjustment: 0
+        });
+      }
+      
+      // Afternoon slot  
+      const afternoonAvailable = Math.random() > 0.2;
+      if (afternoonAvailable) {
+        deliveryOptions.push({
+          option_id: `${dateStr}_afternoon`,
           date: dateStr,
-          time_slot: "14:00 - 18:00",
-          display_date: date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }),
-          display_time: "Tarde (14:00 - 18:00)",
-          available: Math.random() > 0.2, // 80% availability
-          cost: "Gratuito"
-        }
-      );
+          time_slot: "14:00-18:00", 
+          slot_type: "afternoon",
+          available: true,
+          price_adjustment: 0
+        });
+      }
     }
 
-    // Keep only available slots and limit to 8
-    const availableOptions = deliveryOptions.filter(option => option.available).slice(0, 8);
+    // Filter to only available options and limit to 8
+    const availableOptions = deliveryOptions
+      .filter(option => option.available)
+      .slice(0, 8);
 
     const deliveryOptionsData = {
-      delivery_options: availableOptions,
-      search_criteria: {
-        preferred_date,
-        preferred_time
-      },
-      search_timestamp: new Date().toISOString(),
-      total_options_found: availableOptions.length
+      available_options: availableOptions,
+      original_date: "2025-08-30",
+      options_generated_at: new Date().toISOString(),
+      total_options: availableOptions.length
     };
 
     console.log('Generated delivery options:', deliveryOptionsData);
 
-    // Update workflow to showing_options step  
+    // Update workflow to showing_options step
     const { data: workflow, error: upsertError } = await supabase
       .from('workflows')
       .upsert({
@@ -104,8 +107,7 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true,
         next_step: 'showing_options',
-        delivery_options: availableOptions,
-        total_found: availableOptions.length
+        available_options: availableOptions
       }), 
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

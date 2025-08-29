@@ -37,11 +37,16 @@ interface WorkflowConfigReturn {
 // Mapping de strings de iconos a componentes React
 const iconMap: Record<string, React.ReactNode> = {
   'phone': <Phone className="w-6 h-6" />,
+  'phone-call': <Phone className="w-6 h-6" />,
+  'phone-off': <Phone className="w-6 h-6" />,
   'calendar': <Calendar className="w-6 h-6" />,
   'check-circle': <CheckCircle className="w-6 h-6" />,
+  'shield-check': <CheckCircle className="w-6 h-6" />,
   'x-circle': <XCircle className="w-6 h-6" />,
   'clock': <Clock className="w-6 h-6" />,
   'search': <Search className="w-6 h-6" />,
+  'package-search': <Search className="w-6 h-6" />,
+  'message-circle': <CheckCircle className="w-6 h-6" />,
   'phone-small': <Phone className="w-4 h-4" />,
   'calendar-small': <Calendar className="w-4 h-4" />,
   'check-circle-small': <CheckCircle className="w-4 h-4" />,
@@ -80,10 +85,11 @@ export const useWorkflowConfig = (workflowType: string): WorkflowConfigReturn =>
         
         // Map icons from strings to components React
         const workflowSteps: Record<string, WorkflowStep> = {};
-        Object.entries(stepsConfig.workflow_steps as any).forEach(([key, step]: [string, any]) => {
+        Object.entries(stepsConfig.steps as any).forEach(([key, step]: [string, any]) => {
           workflowSteps[key] = {
             ...step,
-            icon: iconMap[step.iconName] || <Clock className="w-6 h-6" />
+            iconName: step.icon, // Add iconName property for consistency
+            icon: iconMap[step.icon] || <Clock className="w-6 h-6" />
           };
         });
 

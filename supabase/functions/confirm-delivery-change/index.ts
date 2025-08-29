@@ -39,34 +39,28 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Generate confirmation number
-    const confirmationNumber = `DEL-${Math.floor(Math.random() * 900000) + 100000}`;
-    
-    // Parse selected option details (assuming format: date_timeperiod)
-    const [selectedDate, timePeriod] = selected_option_id.split('_');
-    const timeSlot = timePeriod === 'morning' ? '09:00 - 13:00' : '14:00 - 18:00';
+    const confirmationNumber = `DLC${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`;
+
+    // Parse selected option to get date and time
+    const [selectedDate, selectedSlot] = selected_option_id.split('_');
+    const timeSlot = selectedSlot === 'morning' ? '09:00-14:00' : '14:00-18:00';
 
     const deliveryChangeData = {
-      confirmation_number: confirmationNumber,
-      contact_name: contact_name || "Cliente",
-      contact_phone: contact_phone || "",
-      new_delivery_date: selectedDate,
-      new_delivery_time: timeSlot,
-      new_delivery_address: new_address || "Dirección actual",
+      confirmed_change: {
+        confirmation_number: confirmationNumber,
+        new_delivery_date: selectedDate,
+        new_time_slot: timeSlot,
+        new_address: new_address || "Calle Mayor 45, 3º B, 28013 Madrid",
+        contact_name: contact_name || "María García López",
+        contact_phone: contact_phone || "+34 612 345 678",
+        change_type: new_address ? "address_and_date" : "date_only"
+      },
       original_delivery_date: "2025-08-30",
-      change_reason: "Cambio solicitado por el cliente",
-      status: "confirmed",
       confirmed_at: new Date().toISOString(),
-      estimated_delivery_window: timeSlot,
-      tracking_updates: [
-        {
-          timestamp: new Date().toISOString(),
-          status: "Cambio de entrega confirmado",
-          description: `Nueva fecha: ${new Date(selectedDate).toLocaleDateString('es-ES')} - ${timeSlot}`
-        }
-      ]
+      status: "confirmed"
     };
 
-    console.log('Generated delivery change data:', deliveryChangeData);
+    console.log('Generated delivery change confirmation:', deliveryChangeData);
 
     // Update workflow to change_confirmed step
     const { data: workflow, error: upsertError } = await supabase
@@ -91,19 +85,13 @@ serve(async (req) => {
       );
     }
 
-    console.log('Workflow updated successfully with confirmation');
+    console.log('Workflow updated successfully with delivery change confirmation');
 
     return new Response(
       JSON.stringify({ 
         success: true,
         next_step: 'change_confirmed',
-        confirmation_number: confirmationNumber,
-        delivery_details: {
-          date: selectedDate,
-          time_slot: timeSlot,
-          address: new_address,
-          contact: contact_name
-        }
+        confirmation: deliveryChangeData.confirmed_change
       }), 
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

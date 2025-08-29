@@ -15,27 +15,35 @@ serve(async (req) => {
   try {
     console.log('Send delivery SMS request received');
     
-    const { session_id, phone_number, workflow_type = 'delivery_change' } = await req.json();
+    const { 
+      session_id, 
+      phone_number,
+      workflow_type = 'delivery_change' 
+    } = await req.json();
     
-    console.log('Processing delivery SMS for session:', session_id, 'to phone:', phone_number);
+    console.log('Request data:', { session_id, phone_number, workflow_type });
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Simulate SMS sending (no real SMS)
+    // Simulate SMS sending
     const simulatedSMSData = {
       sms_confirmation: {
-        phone_number: phone_number,
+        phone_number: phone_number || "+34 612 345 678",
+        message: "Tu entrega ha sido reagendada exitosamente. Nuevo horario: 31/08/2025 entre 09:00-14:00. Confirmación: DLC123456. Gracias por usar nuestro servicio.",
         sent_at: new Date().toISOString(),
-        message: `Su cambio de entrega ha sido confirmado. SMS enviado a ${phone_number}`,
-        status: 'sent',
-        delivery_status: 'delivered'
-      }
+        status: "delivered",
+        sms_id: `SMS${Math.floor(Math.random() * 1000000)}`
+      },
+      delivery_updated: true,
+      notification_sent: true
     };
 
-    // Update workflow using upsert pattern like other edge functions
+    console.log('Generated SMS data:', simulatedSMSData);
+
+    // Update workflow to sms_sent step
     const { data: workflow, error: upsertError } = await supabase
       .from('workflows')
       .upsert({
@@ -58,7 +66,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('Delivery SMS workflow updated successfully');
+    console.log('Workflow updated successfully with SMS confirmation');
 
     return new Response(
       JSON.stringify({ 
