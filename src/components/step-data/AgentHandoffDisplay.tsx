@@ -1,34 +1,38 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Headphones, User, Clock, MessageCircle, Phone } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { Headphones, User, FileText } from 'lucide-react';
 
 interface AgentHandoffDisplayProps {
   data: {
     agent_connected?: {
-      agent_info: {
+      agent_details: {
         agent_id: string;
-        name: string;
+        agent_name: string;
         department: string;
-        specialization: string[];
-        experience_level: string;
-        languages: string[];
-        status: string;
+        specialization: string;
+        estimated_wait_time: string;
+        assigned_at: string;
       };
       escalation_context: {
-        customer_name: string;
-        issue_type: string;
-        priority_level: string;
-        conversation_summary: string;
-        suggested_actions: string[];
-        relevant_history: string;
-        customer_sentiment: string;
+        customer_info: {
+          name: string;
+          issue_type: string;
+          specific_concern: string;
+        };
+        conversation_summary: {
+          issue_identified: string;
+          root_cause: string;
+          customer_preference: string;
+          resolution_attempted: string;
+          next_action: string;
+        };
+        agent_notes: string[];
       };
-      connection_details: {
-        connected_at: string;
-        estimated_wait_time: string;
-        connection_method: string;
-      };
+      handoff_time: string;
+      context_transferred: boolean;
+      customer_satisfaction_predicted: string;
     };
   };
   isActive: boolean;
@@ -42,87 +46,75 @@ export const AgentHandoffDisplay: React.FC<AgentHandoffDisplayProps> = ({
 
   if (!agentConnection) return null;
 
-  const { agent_info, escalation_context, connection_details } = agentConnection;
+  const { agent_details, escalation_context, handoff_time, context_transferred } = agentConnection;
 
   return (
-    <Card className={`mt-3 ${isActive ? 'border-primary' : 'border-border/50'}`}>
-      <CardContent className="p-4">
-        <div className={`space-y-3 text-sm ${isActive ? 'text-primary' : 'text-foreground'}`}>
-          <div className="flex items-center space-x-2">
-            <Headphones className="w-4 h-4 text-blue-500" />
-            <span className="font-medium">Conectado con agente</span>
-            <Badge variant="default" className="text-xs">
-              {agent_info.status}
-            </Badge>
+    <Card className={`p-4 ${isActive ? 'border-primary' : 'border-border'}`}>
+      <CardContent className="p-0">
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 mb-4">
+            <Headphones className={`h-5 w-5 ${isActive ? 'text-primary' : 'text-muted-foreground'}`} />
+            <h3 className={`font-semibold ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
+              Agente Conectado
+            </h3>
+            {context_transferred && (
+              <Badge variant="default">Contexto Transferido</Badge>
+            )}
           </div>
-          
-          <div className="grid grid-cols-1 gap-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <User className="w-3 h-3 text-blue-600" />
-                <span className="font-medium text-blue-700">{agent_info.name}</span>
-              </div>
-              <Badge variant="outline" className="text-xs">
-                {agent_info.department}
-              </Badge>
+
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              <span className="font-medium">Agente: {agent_details.agent_name}</span>
             </div>
-            
-            <div className="text-xs text-blue-600">
-              Especialista en: {agent_info.specialization.join(', ')}
-            </div>
-            
-            <div className="flex items-center space-x-1 text-xs text-blue-600">
-              <Clock className="w-3 h-3" />
-              <span>Conectado: {connection_details.connected_at}</span>
+            <div className="text-sm space-y-1">
+              <p><span className="font-medium">Departamento:</span> {agent_details.department}</p>
+              <p><span className="font-medium">Especialización:</span> {agent_details.specialization}</p>
+              <p><span className="font-medium">Tiempo estimado:</span> {agent_details.estimated_wait_time}</p>
+              <p><span className="font-medium">Asignado:</span> {new Date(agent_details.assigned_at).toLocaleTimeString('es-ES')}</p>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <div className="text-xs font-medium">Contexto del caso:</div>
-            
-            <div className="p-2 bg-muted rounded-md">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-medium">Cliente: {escalation_context.customer_name}</span>
-                <Badge 
-                  variant={escalation_context.priority_level === 'high' ? 'destructive' : 'secondary'}
-                  className="text-xs"
-                >
-                  {escalation_context.priority_level}
-                </Badge>
+          <Separator />
+
+          <div className="space-y-3">
+            <h4 className="font-medium flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Contexto de Escalación
+            </h4>
+            <div className="space-y-2 text-sm">
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <p><span className="font-medium">Cliente:</span> {escalation_context.customer_info.name}</p>
+                <p><span className="font-medium">Tipo de consulta:</span> {escalation_context.customer_info.issue_type}</p>
+                <p><span className="font-medium">Preocupación específica:</span> {escalation_context.customer_info.specific_concern}</p>
               </div>
               
-              <div className="text-xs text-muted-foreground mb-2">
-                Tipo: {escalation_context.issue_type}
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <p className="font-medium mb-2">Resumen de la conversación:</p>
+                <div className="space-y-1 text-gray-700">
+                  <p><span className="font-medium">Problema identificado:</span> {escalation_context.conversation_summary.issue_identified}</p>
+                  <p><span className="font-medium">Causa raíz:</span> {escalation_context.conversation_summary.root_cause}</p>
+                  <p><span className="font-medium">Preferencia del cliente:</span> {escalation_context.conversation_summary.customer_preference}</p>
+                  <p><span className="font-medium">Resolución intentada:</span> {escalation_context.conversation_summary.resolution_attempted}</p>
+                  <p><span className="font-medium">Siguiente acción:</span> {escalation_context.conversation_summary.next_action}</p>
+                </div>
               </div>
               
-              <div className="text-xs text-muted-foreground">
-                <strong>Resumen:</strong> {escalation_context.conversation_summary}
-              </div>
+              {escalation_context.agent_notes && escalation_context.agent_notes.length > 0 && (
+                <div className="space-y-2">
+                  <p className="font-medium">Notas para el agente:</p>
+                  <ul className="list-disc list-inside space-y-1 pl-4">
+                    {escalation_context.agent_notes.map((note, index) => (
+                      <li key={index} className="text-gray-600">{note}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
+          </div>
 
-            {escalation_context.suggested_actions && escalation_context.suggested_actions.length > 0 && (
-              <div>
-                <div className="text-xs font-medium mb-1">Acciones sugeridas:</div>
-                <ul className="text-xs text-muted-foreground list-disc list-inside space-y-0.5">
-                  {escalation_context.suggested_actions.map((action, index) => (
-                    <li key={index}>{action}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {escalation_context.customer_sentiment && (
-              <div className="flex items-center space-x-1 text-xs">
-                <MessageCircle className="w-3 h-3" />
-                <span>Sentimiento: </span>
-                <Badge 
-                  variant={escalation_context.customer_sentiment === 'frustrated' ? 'destructive' : 'secondary'}
-                  className="text-xs"
-                >
-                  {escalation_context.customer_sentiment}
-                </Badge>
-              </div>
-            )}
+          <div className="text-xs text-muted-foreground">
+            <p>Transferido: {new Date(handoff_time).toLocaleString('es-ES')}</p>
           </div>
         </div>
       </CardContent>

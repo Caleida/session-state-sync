@@ -98,7 +98,11 @@ const hasCustomerIdentification = (data: any): boolean => {
 };
 
 const hasBillingAnalysis = (data: any): boolean => {
-  return data && data.explaining_charges && data.explaining_charges.billing_details;
+  return data && data.analyzing_bill && data.analyzing_bill.billing_details;
+};
+
+const hasChargesExplanation = (data: any): boolean => {
+  return data && data.explaining_charges && data.explaining_charges.charges_breakdown;
 };
 
 const hasPromotions = (data: any): boolean => {
@@ -106,7 +110,7 @@ const hasPromotions = (data: any): boolean => {
 };
 
 const hasAgentHandoff = (data: any): boolean => {
-  return data && data.agent_connected && data.agent_connected.agent_info;
+  return data && data.agent_connected && data.agent_connected.agent_details;
 };
 
 const hasGenericData = (data: any): boolean => {
@@ -129,6 +133,10 @@ export const StepDataRenderer: React.FC<StepDataRendererProps> = ({
   }
 
   if (hasBillingAnalysis(stepData)) {
+    return <BillingAnalysisDisplay data={stepData} isActive={isActive} />;
+  }
+
+  if (hasChargesExplanation(stepData)) {
     return <BillingAnalysisDisplay data={stepData} isActive={isActive} />;
   }
 
