@@ -7,7 +7,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -23,25 +22,13 @@ serve(async (req) => {
       contact_phone,
       workflow_type = 'delivery_change' 
     } = await req.json();
-    
-    console.log('Request data:', { 
-      session_id, 
-      selected_option_id, 
-      new_address, 
-      contact_name, 
-      contact_phone, 
-      workflow_type 
-    });
 
-    // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Generate confirmation number
     const confirmationNumber = `DLC${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`;
 
-    // Parse selected option to get date and time
     const [selectedDate, selectedSlot] = selected_option_id.split('_');
     const timeSlot = selectedSlot === 'morning' ? '09:00-14:00' : '14:00-18:00';
 
@@ -60,10 +47,7 @@ serve(async (req) => {
       status: "confirmed"
     };
 
-    console.log('Generated delivery change confirmation:', deliveryChangeData);
-
-    // Update workflow to change_confirmed step
-    const { data: workflow, error: upsertError } = await supabase
+    const { error: upsertError } = await supabase
       .from('workflows')
       .upsert({
         session_id,
@@ -73,9 +57,7 @@ serve(async (req) => {
         updated_at: new Date().toISOString()
       }, {
         onConflict: 'session_id,workflow_type'
-      })
-      .select()
-      .maybeSingle();
+      });
 
     if (upsertError) {
       console.error('Error updating workflow:', upsertError);
@@ -84,8 +66,6 @@ serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    console.log('Workflow updated successfully with delivery change confirmation');
 
     return new Response(
       JSON.stringify({ 

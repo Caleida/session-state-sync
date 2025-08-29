@@ -7,7 +7,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -19,12 +18,10 @@ serve(async (req) => {
     
     console.log('Request data:', { session_id, tracking_number, workflow_type });
 
-    // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Simulate package lookup with realistic data
     const mockPackageData = {
       tracking_number: tracking_number,
       sender: "Amazon España",
@@ -44,10 +41,7 @@ serve(async (req) => {
       found: true
     };
 
-    console.log('Generated package data:', packageLookupData);
-
-    // Update workflow to package_lookup step  
-    const { data: workflow, error: upsertError } = await supabase
+    const { error: upsertError } = await supabase
       .from('workflows')
       .upsert({
         session_id,
@@ -57,9 +51,7 @@ serve(async (req) => {
         updated_at: new Date().toISOString()
       }, {
         onConflict: 'session_id,workflow_type'
-      })
-      .select()
-      .maybeSingle();
+      });
 
     if (upsertError) {
       console.error('Error updating workflow:', upsertError);
@@ -68,8 +60,6 @@ serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    console.log('Workflow updated successfully with package info');
 
     return new Response(
       JSON.stringify({ 

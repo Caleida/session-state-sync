@@ -7,7 +7,6 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -15,16 +14,12 @@ serve(async (req) => {
   try {
     console.log('Get delivery options request received');
     
-    const { session_id, preferred_date, preferred_time, workflow_type = 'delivery_change' } = await req.json();
+    const { session_id, workflow_type = 'delivery_change' } = await req.json();
     
-    console.log('Request data:', { session_id, preferred_date, preferred_time, workflow_type });
-
-    // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Generate delivery options for next 7 days, excluding weekends
     const deliveryOptions = [];
     const currentDate = new Date();
     
@@ -32,14 +27,11 @@ serve(async (req) => {
       const date = new Date(currentDate);
       date.setDate(currentDate.getDate() + i);
       
-      // Skip weekends
       if (date.getDay() === 0 || date.getDay() === 6) continue;
       
       const dateStr = date.toISOString().split('T')[0];
       
-      // Morning slot
-      const morningAvailable = Math.random() > 0.3;
-      if (morningAvailable) {
+      if (Math.random() > 0.3) {
         deliveryOptions.push({
           option_id: `${dateStr}_morning`,
           date: dateStr,
@@ -50,9 +42,7 @@ serve(async (req) => {
         });
       }
       
-      // Afternoon slot  
-      const afternoonAvailable = Math.random() > 0.2;
-      if (afternoonAvailable) {
+      if (Math.random() > 0.2) {
         deliveryOptions.push({
           option_id: `${dateStr}_afternoon`,
           date: dateStr,
@@ -64,10 +54,7 @@ serve(async (req) => {
       }
     }
 
-    // Filter to only available options and limit to 8
-    const availableOptions = deliveryOptions
-      .filter(option => option.available)
-      .slice(0, 8);
+    const availableOptions = deliveryOptions.slice(0, 8);
 
     const deliveryOptionsData = {
       available_options: availableOptions,
@@ -76,10 +63,7 @@ serve(async (req) => {
       total_options: availableOptions.length
     };
 
-    console.log('Generated delivery options:', deliveryOptionsData);
-
-    // Update workflow to showing_options step
-    const { data: workflow, error: upsertError } = await supabase
+    const { error: upsertError } = await supabase
       .from('workflows')
       .upsert({
         session_id,
@@ -89,9 +73,7 @@ serve(async (req) => {
         updated_at: new Date().toISOString()
       }, {
         onConflict: 'session_id,workflow_type'
-      })
-      .select()
-      .maybeSingle();
+      });
 
     if (upsertError) {
       console.error('Error updating workflow:', upsertError);
@@ -100,8 +82,6 @@ serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    console.log('Workflow updated successfully with delivery options');
 
     return new Response(
       JSON.stringify({ 
