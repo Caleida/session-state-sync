@@ -107,7 +107,19 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       message: 'Cálculo de delivery completado',
-      delivery_info: calculationResult
+      delivery_info: calculationResult,
+      // Información estructurada para que el agente pueda usar en process-order
+      next_step_data: {
+        order_data: {
+          items: processedItems,
+          subtotal: subtotal,
+          delivery_cost: delivery_cost,
+          total: total,
+          delivery_zone: deliveryInfo.zone,
+          estimated_delivery: deliveryInfo.time
+        },
+        delivery_address: address
+      }
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
