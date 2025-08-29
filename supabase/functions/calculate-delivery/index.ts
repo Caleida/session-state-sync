@@ -57,10 +57,19 @@ serve(async (req) => {
       deliveryInfo = deliveryZones['oeste'];
     }
 
-    // Calculate order total
+    // Calculate order total and validate product data
     let subtotal = 0;
+    let processedItems = [];
+    
     if (order_items && Array.isArray(order_items)) {
-      subtotal = order_items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      processedItems = order_items.map(item => ({
+        name: item.name || 'Producto sin nombre',
+        price: item.price || 0,
+        quantity: item.quantity || 1,
+        subtotal: (item.price || 0) * (item.quantity || 1)
+      }));
+      
+      subtotal = processedItems.reduce((sum, item) => sum + item.subtotal, 0);
     }
 
     const delivery_cost = deliveryInfo.cost;
@@ -73,7 +82,7 @@ serve(async (req) => {
       delivery_cost: delivery_cost,
       subtotal: subtotal,
       total: total,
-      order_items: order_items,
+      order_items: processedItems,
       calculation_timestamp: new Date().toISOString()
     };
 
