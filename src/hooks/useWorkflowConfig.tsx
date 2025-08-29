@@ -83,13 +83,18 @@ export const useWorkflowConfig = (workflowType: string): WorkflowConfigReturn =>
         // Extract configuration from database
         const stepsConfig = data.steps_config as any;
         
-        // Map icons from strings to components React
+        // Map icons from strings to components React - handle both old and new structure
         const workflowSteps: Record<string, WorkflowStep> = {};
-        Object.entries(stepsConfig.steps as any).forEach(([key, step]: [string, any]) => {
+        
+        // Check if using old structure (workflow_steps with iconName) or new structure (steps with icon)
+        const stepsData = stepsConfig.workflow_steps || stepsConfig.steps;
+        
+        Object.entries(stepsData as any).forEach(([key, step]: [string, any]) => {
+          const iconKey = step.iconName || step.icon; // Support both iconName and icon properties
           workflowSteps[key] = {
             ...step,
-            iconName: step.icon, // Add iconName property for consistency
-            icon: iconMap[step.icon] || <Clock className="w-6 h-6" />
+            iconName: iconKey, // Ensure iconName exists for consistency
+            icon: iconMap[iconKey] || <Clock className="w-6 h-6" />
           };
         });
 
