@@ -15,11 +15,20 @@ serve(async (req) => {
 
   try {
     const { session_id, phone_number, workflow_type } = await req.json();
+    console.log('SMS request for session:', session_id, 'workflow:', workflow_type, 'phone:', phone_number);
     
     if (!session_id || !phone_number || !workflow_type) {
       console.error('Missing required parameters');
       return new Response(
         JSON.stringify({ error: 'session_id, phone_number and workflow_type are required' }), 
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate workflow_type
+    if (!['booking', 'delivery_change', 'order_management'].includes(workflow_type)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid workflow_type. Must be "booking", "delivery_change", or "order_management"' }), 
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -41,9 +50,12 @@ serve(async (req) => {
     } else if (workflow_type === 'delivery_change') {
       message = `Tu entrega ha sido reagendada exitosamente. SMS enviado a ${phone_number}`;
       currentStep = 'sms_sent';
+    } else if (workflow_type === 'order_management') {
+      message = `Su pedido de pizzería ha sido procesado exitosamente. Tiempo estimado de entrega: 30-40 min. ¡Gracias por su preferencia! SMS enviado a ${phone_number}`;
+      currentStep = 'sms_sent';
     } else {
       return new Response(
-        JSON.stringify({ error: 'Invalid workflow_type. Must be "booking" or "delivery_change"' }), 
+        JSON.stringify({ error: 'Invalid workflow_type. Must be "booking", "delivery_change", or "order_management"' }), 
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

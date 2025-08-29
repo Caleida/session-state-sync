@@ -13,8 +13,30 @@ serve(async (req) => {
   }
 
   try {
-    const { session_id, current_step, address, order_items } = await req.json();
-    console.log('Calculating delivery for session:', session_id, 'address:', address);
+    const { session_id, current_step, address, order_items, workflow_type } = await req.json();
+    console.log('Calculating delivery for session:', session_id, 'workflow:', workflow_type, 'address:', address);
+
+    // Validate required parameters
+    if (!session_id || !workflow_type) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Faltan parámetros requeridos: session_id, workflow_type'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Validate workflow_type
+    if (workflow_type !== 'order_management') {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Tipo de workflow no válido para cálculo de entrega'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     // Initialize Supabase client
     const supabase = createClient(
