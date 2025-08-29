@@ -14,3 +14,15 @@ verify_jwt = false
 
 [functions.send-confirmation-sms]
 verify_jwt = false
+
+[functions.lookup-package]
+verify_jwt = false
+
+[functions.get-delivery-options]
+verify_jwt = false
+
+[functions.confirm-delivery-change]
+verify_jwt = false
+
+[functions.send-delivery-sms]
+verify_jwt = false
