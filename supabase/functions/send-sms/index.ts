@@ -14,12 +14,12 @@ serve(async (req) => {
   }
 
   try {
-    const { session_id, phone_number } = await req.json();
+    const { session_id, phone_number, workflow_type } = await req.json();
     
-    if (!session_id || !phone_number) {
+    if (!session_id || !phone_number || !workflow_type) {
       console.error('Missing required parameters');
       return new Response(
-        JSON.stringify({ error: 'session_id and phone_number are required' }), 
+        JSON.stringify({ error: 'session_id, phone_number and workflow_type are required' }), 
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -29,14 +29,31 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log('Processing SMS confirmation for session:', session_id, 'to phone:', phone_number);
+    console.log('Processing SMS for session:', session_id, 'to phone:', phone_number, 'workflow:', workflow_type);
+
+    // Generate message and current_step based on workflow_type
+    let message: string;
+    let currentStep: string;
+
+    if (workflow_type === 'booking') {
+      message = `Su cita ha sido confirmada. SMS enviado a ${phone_number}`;
+      currentStep = 'sms_confirmation_sent';
+    } else if (workflow_type === 'delivery_change') {
+      message = `Tu entrega ha sido reagendada exitosamente. SMS enviado a ${phone_number}`;
+      currentStep = 'sms_sent';
+    } else {
+      return new Response(
+        JSON.stringify({ error: 'Invalid workflow_type. Must be "booking" or "delivery_change"' }), 
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Simulate SMS sending (no real SMS)
     const simulatedSMSData = {
       sms_confirmation: {
         sent_to: phone_number,
         sent_at: new Date().toISOString(),
-        message: `Su cita ha sido confirmada. SMS enviado a ${phone_number}`,
+        message: message,
         status: 'sent',
         delivery_status: 'delivered'
       }
@@ -47,8 +64,8 @@ serve(async (req) => {
       .from('workflows')
       .upsert({
         session_id,
-        workflow_type: 'booking',
-        current_step: 'sms_confirmation_sent',
+        workflow_type,
+        current_step: currentStep,
         step_data: simulatedSMSData,
         updated_at: new Date().toISOString()
       }, {
@@ -65,19 +82,19 @@ serve(async (req) => {
       );
     }
 
-    console.log('SMS confirmation simulated successfully for session:', session_id);
+    console.log('SMS simulated successfully for session:', session_id);
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        next_step: 'sms_confirmation_sent',
+        next_step: currentStep,
         sms_details: simulatedSMSData.sms_confirmation
       }), 
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('Error in send-confirmation-sms function:', error);
+    console.error('Error in send-sms function:', error);
     return new Response(
       JSON.stringify({ error: error.message }), 
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
