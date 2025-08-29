@@ -177,7 +177,7 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
     );
   }
 
-  const { workflowSteps, stepOrder } = config;
+  const { steps, stepOrder } = config;
 
   const getStepIndex = (step: string) => stepOrder.indexOf(step);
   const currentStepIndex = getStepIndex(currentStep);
@@ -202,7 +202,7 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
 
       <div className="space-y-4">
         {stepOrder.map((stepId, index) => {
-          const step = workflowSteps[stepId];
+          const step = steps[stepId];
           const status = getStepStatus(stepId);
           const isActive = status === 'active';
           const isCompleted = status === 'completed';

@@ -7,8 +7,7 @@ interface WorkflowStep {
   name: string;
   description: string;
   icon: React.ReactNode;
-  iconName: string;
-  actor: 'user' | 'beyond';
+  actor: 'user' | 'beyond' | 'system';
 }
 
 interface SimulateStep {
@@ -21,7 +20,7 @@ interface SimulateStep {
 interface WorkflowConfig {
   name: string;
   description: string;
-  workflowSteps: Record<string, WorkflowStep>;
+  steps: Record<string, WorkflowStep>;
   stepOrder: string[];
   simulateSteps: SimulateStep[];
   simulationMessages: Record<string, string>;
@@ -93,45 +92,41 @@ export const useWorkflowConfig = (workflowType: string): WorkflowConfigReturn =>
         // Extract configuration from database
         const stepsConfig = data.steps_config as any;
         
-        // Map icons from strings to components React - handle both old and new structure
-        const workflowSteps: Record<string, WorkflowStep> = {};
-        
-        // Check if using old structure (workflow_steps with iconName) or new structure (steps with icon)
-        const stepsData = stepsConfig.workflow_steps || stepsConfig.steps;
+        // All workflows now use standardized snake_case format
+        const stepsData = stepsConfig.steps;
+        const steps: Record<string, WorkflowStep> = {};
         
         Object.entries(stepsData as any).forEach(([key, step]: [string, any]) => {
-          const iconKey = step.iconName || step.icon; // Support both iconName and icon properties
-          workflowSteps[key] = {
-            ...step,
-            iconName: iconKey, // Ensure iconName exists for consistency
+          const iconKey = step.icon;
+          steps[key] = {
+            id: step.id || key,
+            name: step.name,
+            description: step.description,
+            actor: step.actor || 'user',
             icon: iconMap[iconKey] || <Clock className="w-6 h-6" />
           };
         });
 
-        // Extract simulation messages (fallback to existing structure if not migrated yet)
+        // Extract simulation messages
         const simulationMessages = stepsConfig.simulation_messages || {};
         
-        // Get the correct step order property (handle both stepOrder and step_order)
-        const stepOrder = stepsConfig.stepOrder || stepsConfig.step_order;
+        // Get step order using standardized snake_case
+        const stepOrder = stepsConfig.step_order;
         
-        // Generate simulateSteps automatically from workflowSteps
+        // Generate simulateSteps automatically from steps
         const simulateSteps: SimulateStep[] = stepOrder
           ? stepOrder.filter((stepId: string) => stepId !== 'waiting') // Exclude waiting step
           .map((stepId: string) => {
-            const step = workflowSteps[stepId];
+            const step = steps[stepId];
             if (!step) return null;
             
-            // Get message from simulation_messages or fallback to existing simulate_steps
-            let message = simulationMessages[stepId];
-            if (!message && stepsConfig.simulate_steps) {
-              const existingStep = stepsConfig.simulate_steps.find((s: any) => s.id === stepId);
-              message = existingStep?.data?.message || `${step.name}...`;
-            }
+            // Get message from simulation_messages
+            const message = simulationMessages[stepId] || `${step.name}...`;
             
             return {
               id: stepId,
               name: step.name,
-              icon: iconMap[step.iconName.replace('-small', '') + '-small'] || iconMap[step.iconName] || <Clock className="w-4 h-4" />,
+              icon: iconMap[stepId + '-small'] || iconMap[stepId] || <Clock className="w-4 h-4" />,
               data: { message }
             };
           })
@@ -141,7 +136,7 @@ export const useWorkflowConfig = (workflowType: string): WorkflowConfigReturn =>
         setConfig({
           name: data.name,
           description: data.description,
-          workflowSteps,
+          steps,
           stepOrder: stepOrder || [],
           simulateSteps,
           simulationMessages

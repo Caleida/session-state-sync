@@ -94,7 +94,7 @@ const WorkflowDemo = () => {
           <CardHeader className="text-center">
             <CardTitle className="flex items-center justify-center space-x-2">
               <Play className="w-6 h-6" />
-              <span>Demo Workflow: {config.workflowSteps[config.stepOrder[0]]?.name || workflowType}</span>
+              <span>Demo Workflow: {config.steps[config.stepOrder[0]]?.name || workflowType}</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
