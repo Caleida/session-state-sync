@@ -11,6 +11,10 @@ import { DeliveryChangeConfirmationDisplay } from './step-data/DeliveryChangeCon
 import { ProductCatalogDisplay } from './step-data/ProductCatalogDisplay';
 import { OrderSummaryDisplay } from './step-data/OrderSummaryDisplay';
 import { OrderConfirmationDisplay } from './step-data/OrderConfirmationDisplay';
+import { CustomerIdentificationDisplay } from './step-data/CustomerIdentificationDisplay';
+import { BillingAnalysisDisplay } from './step-data/BillingAnalysisDisplay';
+import { PromotionsDisplay } from './step-data/PromotionsDisplay';
+import { AgentHandoffDisplay } from './step-data/AgentHandoffDisplay';
 
 interface StepDataRendererProps {
   stepData: any;
@@ -88,6 +92,23 @@ const hasOrderConfirmation = (data: any): boolean => {
          data.status === 'confirmed';
 };
 
+// Customer support detection functions
+const hasCustomerIdentification = (data: any): boolean => {
+  return data && data.customer_identification && data.customer_identification.customer_info;
+};
+
+const hasBillingAnalysis = (data: any): boolean => {
+  return data && data.analyzing_bill && data.analyzing_bill.billing_details;
+};
+
+const hasPromotions = (data: any): boolean => {
+  return data && data.offering_promotions && data.offering_promotions.available_promotions;
+};
+
+const hasAgentHandoff = (data: any): boolean => {
+  return data && data.agent_connection && data.agent_connection.agent_info;
+};
+
 const hasGenericData = (data: any): boolean => {
   return data && typeof data === 'object' && Object.keys(data).length > 0;
 };
@@ -100,6 +121,23 @@ export const StepDataRenderer: React.FC<StepDataRendererProps> = ({
   // Return null if no data
   if (!stepData || (typeof stepData === 'object' && Object.keys(stepData).length === 0)) {
     return null;
+  }
+
+  // Customer support displays (check first for priority)
+  if (hasCustomerIdentification(stepData)) {
+    return <CustomerIdentificationDisplay data={stepData} isActive={isActive} />;
+  }
+
+  if (hasBillingAnalysis(stepData)) {
+    return <BillingAnalysisDisplay data={stepData} isActive={isActive} />;
+  }
+
+  if (hasPromotions(stepData)) {
+    return <PromotionsDisplay data={stepData} isActive={isActive} />;
+  }
+
+  if (hasAgentHandoff(stepData)) {
+    return <AgentHandoffDisplay data={stepData} isActive={isActive} />;
   }
 
   // Render based on data structure detection
