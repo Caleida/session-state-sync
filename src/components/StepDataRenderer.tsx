@@ -5,6 +5,9 @@ import { CallSummaryDisplay } from './step-data/CallSummaryDisplay';
 import { CallStartedDisplay } from './step-data/CallStartedDisplay';
 import { SMSConfirmationDisplay } from './step-data/SMSConfirmationDisplay';
 import { GenericDataDisplay } from './step-data/GenericDataDisplay';
+import { PackageInfoDisplay } from './step-data/PackageInfoDisplay';
+import { DeliveryOptionsDisplay } from './step-data/DeliveryOptionsDisplay';
+import { DeliveryChangeConfirmationDisplay } from './step-data/DeliveryChangeConfirmationDisplay';
 
 interface StepDataRendererProps {
   stepData: any;
@@ -52,6 +55,18 @@ const hasSimpleMessage = (data: any): boolean => {
   return data && typeof data.message === 'string';
 };
 
+const hasPackageInfo = (data: any): boolean => {
+  return data && data.package_info && data.package_info.tracking_number;
+};
+
+const hasDeliveryOptions = (data: any): boolean => {
+  return data && Array.isArray(data.available_options) && data.available_options.length > 0;
+};
+
+const hasDeliveryChangeConfirmation = (data: any): boolean => {
+  return data && data.confirmed_change && data.confirmed_change.confirmation_number;
+};
+
 const hasGenericData = (data: any): boolean => {
   return data && typeof data === 'object' && Object.keys(data).length > 0;
 };
@@ -67,6 +82,18 @@ export const StepDataRenderer: React.FC<StepDataRendererProps> = ({
   }
 
   // Render based on data structure detection
+  if (hasPackageInfo(stepData)) {
+    return <PackageInfoDisplay data={stepData} isActive={isActive} />;
+  }
+
+  if (hasDeliveryOptions(stepData)) {
+    return <DeliveryOptionsDisplay data={stepData} isActive={isActive} />;
+  }
+
+  if (hasDeliveryChangeConfirmation(stepData)) {
+    return <DeliveryChangeConfirmationDisplay data={stepData} isActive={isActive} />;
+  }
+
   if (hasAvailableSlots(stepData)) {
     return <AvailableSlotsDisplay data={stepData} isActive={isActive} />;
   }
