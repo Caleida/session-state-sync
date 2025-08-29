@@ -82,11 +82,6 @@ export const StepDataRenderer: React.FC<StepDataRendererProps> = ({
   }
 
   // Render based on data structure detection
-  // SMS confirmation should be checked early to avoid conflicts
-  if (hasSMSConfirmation(stepData)) {
-    return <SMSConfirmationDisplay data={stepData} isActive={isActive} />;
-  }
-
   if (hasPackageInfo(stepData)) {
     return <PackageInfoDisplay data={stepData} isActive={isActive} />;
   }
@@ -109,6 +104,10 @@ export const StepDataRenderer: React.FC<StepDataRendererProps> = ({
 
   if (hasCallStarted(stepData)) {
     return <CallStartedDisplay data={stepData} isActive={isActive} />;
+  }
+
+  if (hasSMSConfirmation(stepData)) {
+    return <SMSConfirmationDisplay data={stepData} isActive={isActive} />;
   }
 
   if (hasCallSummary(stepData)) {
