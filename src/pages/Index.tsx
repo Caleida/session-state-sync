@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar, Settings, ArrowRight, Loader2, Truck, UtensilsCrossed } from "lucide-react";
+import { Calendar, Settings, ArrowRight, Loader2, Truck, UtensilsCrossed, Headphones } from "lucide-react";
 
 interface WorkflowDefinition {
   workflow_type: string;
@@ -48,6 +48,8 @@ const Index = () => {
         return <Truck className="w-8 h-8" />;
       case 'order_management':
         return <UtensilsCrossed className="w-8 h-8" />;
+      case 'customer_support':
+        return <Headphones className="w-8 h-8" />;
       default:
         return <Settings className="w-8 h-8" />;
     }
