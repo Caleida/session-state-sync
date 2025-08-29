@@ -48,7 +48,9 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
           .select('current_step, step_data')
           .eq('session_id', sessionId)
           .eq('workflow_type', workflowType)
-          .maybeSingle();
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
         
         if (error) {
           console.error('❌ Error loading workflow state:', error);
