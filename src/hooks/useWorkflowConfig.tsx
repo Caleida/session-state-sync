@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Phone, Calendar, CheckCircle, XCircle, Clock, Search } from 'lucide-react';
+import { Phone, Calendar, CheckCircle, XCircle, Clock, Search, Menu, ShoppingCart, Truck, MessageSquare, CheckCircle2 } from 'lucide-react';
 
 interface WorkflowStep {
   id: string;
@@ -41,16 +41,26 @@ const iconMap: Record<string, React.ReactNode> = {
   'phone-off': <Phone className="w-6 h-6" />,
   'calendar': <Calendar className="w-6 h-6" />,
   'check-circle': <CheckCircle className="w-6 h-6" />,
+  'check-circle-2': <CheckCircle2 className="w-6 h-6" />,
   'shield-check': <CheckCircle className="w-6 h-6" />,
   'x-circle': <XCircle className="w-6 h-6" />,
   'clock': <Clock className="w-6 h-6" />,
   'search': <Search className="w-6 h-6" />,
   'package-search': <Search className="w-6 h-6" />,
+  'menu': <Menu className="w-6 h-6" />,
+  'shopping-cart': <ShoppingCart className="w-6 h-6" />,
+  'truck': <Truck className="w-6 h-6" />,
+  'message-square': <MessageSquare className="w-6 h-6" />,
   'message-circle': <CheckCircle className="w-6 h-6" />,
   'phone-small': <Phone className="w-4 h-4" />,
   'calendar-small': <Calendar className="w-4 h-4" />,
   'check-circle-small': <CheckCircle className="w-4 h-4" />,
-  'x-circle-small': <XCircle className="w-4 h-4" />
+  'check-circle-2-small': <CheckCircle2 className="w-4 h-4" />,
+  'x-circle-small': <XCircle className="w-4 h-4" />,
+  'menu-small': <Menu className="w-4 h-4" />,
+  'shopping-cart-small': <ShoppingCart className="w-4 h-4" />,
+  'truck-small': <Truck className="w-4 h-4" />,
+  'message-square-small': <MessageSquare className="w-4 h-4" />
 };
 
 export const useWorkflowConfig = (workflowType: string): WorkflowConfigReturn => {
@@ -101,9 +111,12 @@ export const useWorkflowConfig = (workflowType: string): WorkflowConfigReturn =>
         // Extract simulation messages (fallback to existing structure if not migrated yet)
         const simulationMessages = stepsConfig.simulation_messages || {};
         
+        // Get the correct step order property (handle both stepOrder and step_order)
+        const stepOrder = stepsConfig.stepOrder || stepsConfig.step_order;
+        
         // Generate simulateSteps automatically from workflowSteps
-        const simulateSteps: SimulateStep[] = stepsConfig.step_order
-          .filter((stepId: string) => stepId !== 'waiting') // Exclude waiting step
+        const simulateSteps: SimulateStep[] = stepOrder
+          ? stepOrder.filter((stepId: string) => stepId !== 'waiting') // Exclude waiting step
           .map((stepId: string) => {
             const step = workflowSteps[stepId];
             if (!step) return null;
@@ -122,13 +135,14 @@ export const useWorkflowConfig = (workflowType: string): WorkflowConfigReturn =>
               data: { message }
             };
           })
-          .filter(Boolean) as SimulateStep[];
+          .filter(Boolean) as SimulateStep[]
+          : [];
 
         setConfig({
           name: data.name,
           description: data.description,
           workflowSteps,
-          stepOrder: stepsConfig.step_order as string[],
+          stepOrder: stepOrder || [],
           simulateSteps,
           simulationMessages
         });
