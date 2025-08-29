@@ -14,7 +14,8 @@ serve(async (req) => {
   try {
     console.log('Package lookup request received');
     
-    const { session_id, tracking_number, workflow_type = 'delivery_change' } = await req.json();
+    const { session_id, tracking_number } = await req.json();
+    const workflow_type = 'delivery_change';
     
     console.log('Request data:', { session_id, tracking_number, workflow_type });
 

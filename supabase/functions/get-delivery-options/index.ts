@@ -14,7 +14,8 @@ serve(async (req) => {
   try {
     console.log('Get delivery options request received');
     
-    const { session_id, workflow_type = 'delivery_change' } = await req.json();
+    const { session_id } = await req.json();
+    const workflow_type = 'delivery_change';
     
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;

@@ -19,9 +19,9 @@ serve(async (req) => {
       selected_option_id, 
       new_address, 
       contact_name, 
-      contact_phone,
-      workflow_type = 'delivery_change' 
+      contact_phone
     } = await req.json();
+    const workflow_type = 'delivery_change';
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
