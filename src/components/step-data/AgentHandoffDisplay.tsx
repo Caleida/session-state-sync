@@ -5,7 +5,7 @@ import { Headphones, User, Clock, MessageCircle, Phone } from 'lucide-react';
 
 interface AgentHandoffDisplayProps {
   data: {
-    agent_connection?: {
+    agent_connected?: {
       agent_info: {
         agent_id: string;
         name: string;
@@ -38,7 +38,7 @@ export const AgentHandoffDisplay: React.FC<AgentHandoffDisplayProps> = ({
   data, 
   isActive 
 }) => {
-  const agentConnection = data.agent_connection;
+  const agentConnection = data.agent_connected;
 
   if (!agentConnection) return null;
 

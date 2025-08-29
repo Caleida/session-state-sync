@@ -5,7 +5,7 @@ import { Receipt, TrendingUp, AlertTriangle, Calendar } from 'lucide-react';
 
 interface BillingAnalysisDisplayProps {
   data: {
-    analyzing_bill?: {
+    explaining_charges?: {
       billing_details: {
         current_bill: {
           amount: number;
@@ -43,7 +43,7 @@ export const BillingAnalysisDisplay: React.FC<BillingAnalysisDisplayProps> = ({
   data, 
   isActive 
 }) => {
-  const billingData = data.analyzing_bill;
+  const billingData = data.explaining_charges;
 
   if (!billingData) return null;
 

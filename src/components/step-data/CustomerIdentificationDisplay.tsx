@@ -5,7 +5,7 @@ import { UserCheck, Phone, User, MapPin, Calendar } from 'lucide-react';
 
 interface CustomerIdentificationDisplayProps {
   data: {
-    customer_identification?: {
+    customer_identified?: {
       customer_info: {
         name: string;
         phone: string;
@@ -25,7 +25,7 @@ export const CustomerIdentificationDisplay: React.FC<CustomerIdentificationDispl
   data, 
   isActive 
 }) => {
-  const customerInfo = data.customer_identification?.customer_info;
+  const customerInfo = data.customer_identified?.customer_info;
 
   if (!customerInfo) return null;
 

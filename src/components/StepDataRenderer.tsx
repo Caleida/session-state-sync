@@ -94,11 +94,11 @@ const hasOrderConfirmation = (data: any): boolean => {
 
 // Customer support detection functions
 const hasCustomerIdentification = (data: any): boolean => {
-  return data && data.customer_identification && data.customer_identification.customer_info;
+  return data && data.customer_identified && data.customer_identified.customer_info;
 };
 
 const hasBillingAnalysis = (data: any): boolean => {
-  return data && data.analyzing_bill && data.analyzing_bill.billing_details;
+  return data && data.explaining_charges && data.explaining_charges.billing_details;
 };
 
 const hasPromotions = (data: any): boolean => {
@@ -106,7 +106,7 @@ const hasPromotions = (data: any): boolean => {
 };
 
 const hasAgentHandoff = (data: any): boolean => {
-  return data && data.agent_connection && data.agent_connection.agent_info;
+  return data && data.agent_connected && data.agent_connected.agent_info;
 };
 
 const hasGenericData = (data: any): boolean => {
