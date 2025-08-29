@@ -48,15 +48,15 @@ serve(async (req) => {
       const dateStr = date.toISOString().split('T')[0];
       
       // Higher probability for preferred time slot
-      const morningProbability = preferred_time === 'morning' ? 0.8 : 0.7;
-      const afternoonProbability = preferred_time === 'afternoon' ? 0.8 : 0.8;
+      const morningProbability = preferred_time === 'mañana' ? 0.8 : 0.7;
+      const afternoonProbability = preferred_time === 'tarde' ? 0.8 : 0.8;
       
       if (Math.random() < morningProbability) {
         deliveryOptions.push({
-          option_id: `${dateStr}_morning`,
+          option_id: `${dateStr}_mañana`,
           date: dateStr,
           time_slot: "09:00-14:00",
-          slot_type: "morning",
+          slot_type: "mañana",
           available: true,
           price_adjustment: 0
         });
@@ -64,10 +64,10 @@ serve(async (req) => {
       
       if (Math.random() < afternoonProbability) {
         deliveryOptions.push({
-          option_id: `${dateStr}_afternoon`,
+          option_id: `${dateStr}_tarde`,
           date: dateStr,
           time_slot: "14:00-18:00", 
-          slot_type: "afternoon",
+          slot_type: "tarde",
           available: true,
           price_adjustment: 0
         });
@@ -113,7 +113,7 @@ serve(async (req) => {
     }
 
     const message = availableOptions.length > 0 
-      ? `Encontré ${availableOptions.length} opciones de entrega disponibles${preferred_date ? ` cerca de tu fecha preferida` : ''}${preferred_time ? ` en horario ${preferred_time === 'morning' ? 'matutino' : 'vespertino'}` : ''}`
+      ? `Encontré ${availableOptions.length} opciones de entrega disponibles${preferred_date ? ` cerca de tu fecha preferida` : ''}${preferred_time ? ` en horario ${preferred_time === 'mañana' ? 'matutino' : 'vespertino'}` : ''}`
       : 'No se encontraron opciones de entrega disponibles';
 
     return new Response(
