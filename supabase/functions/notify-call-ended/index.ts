@@ -33,6 +33,7 @@ serve(async (req) => {
     
     const { 
       session_id, 
+      workflow_type,
       call_duration, 
       termination_reason, 
       call_summary
@@ -42,8 +43,9 @@ serve(async (req) => {
       throw new Error('session_id is required');
     }
     
-    // Always use 'booking' as workflow_type since this function is only used for booking flow
-    const workflow_type = 'booking';
+    if (!workflow_type) {
+      throw new Error('workflow_type is required');
+    }
     
     console.log('Request data:', { 
       session_id, 
