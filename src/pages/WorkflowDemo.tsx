@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from '@/components/ui/breadcrumb';
 import { WorkflowVisualization } from '@/components/WorkflowVisualization';
-import { WorkflowSimulator } from '@/components/WorkflowSimulator';
+import { ContactBanner } from '@/components/ContactBanner';
 import { useWorkflowConfig } from '@/hooks/useWorkflowConfig';
 import { Play, ArrowLeft, Home } from 'lucide-react';
 
@@ -168,9 +168,7 @@ const WorkflowDemo = () => {
           </div>
           
           <div className="space-y-4">
-            {sessionId && (
-              <WorkflowSimulator sessionId={sessionId} workflowType={workflowType} />
-            )}
+            <ContactBanner />
             {agentId && (
               <div dangerouslySetInnerHTML={{
                 __html: `<elevenlabs-convai
