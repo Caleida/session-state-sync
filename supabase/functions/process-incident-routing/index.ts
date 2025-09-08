@@ -68,26 +68,26 @@ serve(async (req) => {
     const incidentAnalysis = {
       issue_type: issue_type || 'damaged_package',
       severity: severity || 'high',
-      classification: 'critical_incident',
-      priority: 'immediate_escalation',
-      recommended_action: 'transfer_to_specialist',
+      classification: 'incidencia_critica',
+      priority: 'escalacion_inmediata',
+      recommended_action: 'transferir_a_especialista',
       analysis_timestamp: new Date().toISOString(),
       routing_decision: {
         action: 'escalate',
-        reason: 'Damaged package requires specialized handling',
-        department: 'incident_resolution',
-        estimated_resolution_time: '15-30 minutes'
+        reason: 'Paquete dañado requiere gestión especializada',
+        department: 'resolución_incidencias',
+        estimated_resolution_time: '15-30 minutos'
       },
       context_for_agent: {
         customer_identified: !!customer_info,
         package_located: !!package_info,
-        incident_type: 'Physical damage to package',
-        urgency_level: 'High - Customer satisfaction risk',
+        incident_type: 'Daño físico al paquete',
+        urgency_level: 'Alto - Riesgo de satisfacción del cliente',
         required_actions: [
-          'Verify damage extent',
-          'Process compensation claim',
-          'Arrange replacement/refund',
-          'Document incident for carrier'
+          'Verificar extensión del daño',
+          'Procesar reclamación de compensación',
+          'Gestionar reemplazo/reembolso',
+          'Documentar incidencia para transportista'
         ]
       }
     };
