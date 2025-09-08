@@ -192,8 +192,8 @@ export const WorkflowVisualization: React.FC<WorkflowVisualizationProps> = ({ se
   return (
     <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold mb-2">Atención al Cliente Inteligente</h2>
-        <p className="text-muted-foreground mb-4">Workflow para consultas de facturación y soporte al cliente con escalado inteligente a agentes humanos</p>
+        <h2 className="text-2xl font-bold mb-2">{config.name}</h2>
+        <p className="text-muted-foreground mb-4">{config.description}</p>
         <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-4 rounded-lg border border-primary/20">
           <p className="text-sm text-foreground leading-relaxed">
             <strong>Experimenta cómo funciona por dentro:</strong> Cada agente de voz procesa las llamadas paso a paso, 
