@@ -8,7 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Beyond IVR Style - Dark Theme by default */
+    /* Beyond IVR Style - Soft Dark Theme */
     --background: 220 27% 11%;
     --foreground: 0 0% 98%;
 
@@ -18,16 +18,16 @@ All colors MUST be HSL.
     --popover: 220 27% 13%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 235 100% 65%;
+    --primary: 235 85% 55%;
     --primary-foreground: 0 0% 98%;
 
-    --secondary: 255 100% 75%;
+    --secondary: 255 85% 65%;
     --secondary-foreground: 220 27% 11%;
 
     --muted: 220 27% 16%;
     --muted-foreground: 220 9% 65%;
 
-    --accent: 235 100% 65%;
+    --accent: 235 85% 55%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 84.2% 60.2%;
@@ -35,27 +35,42 @@ All colors MUST be HSL.
 
     --border: 220 27% 20%;
     --input: 220 27% 16%;
-    --ring: 235 100% 65%;
+    --ring: 235 85% 55%;
+
+    /* Success/Completed states - Soft green */
+    --success: 142 52% 45%;
+    --success-foreground: 0 0% 98%;
+    --success-muted: 142 30% 25%;
+
+    /* Warning states - Soft amber */
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 98%;
+    --warning-muted: 38 50% 30%;
+
+    /* Info states - Soft blue */
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 98%;
+    --info-muted: 217 50% 30%;
 
     --radius: 0.75rem;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(235 100% 65%), hsl(255 100% 75%));
+    --gradient-primary: linear-gradient(135deg, hsl(235 85% 55%), hsl(255 85% 65%));
     --gradient-background: linear-gradient(135deg, hsl(220 27% 11%), hsl(220 27% 8%));
     --gradient-card: linear-gradient(135deg, hsl(220 27% 13%), hsl(220 27% 16%));
     
     /* Shadows */
-    --shadow-glow: 0 0 40px hsl(235 100% 65% / 0.3);
+    --shadow-glow: 0 0 40px hsl(235 85% 55% / 0.2);
     --shadow-card: 0 8px 32px hsl(220 27% 5% / 0.4);
 
     --sidebar-background: 220 27% 11%;
     --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 235 100% 65%;
+    --sidebar-primary: 235 85% 55%;
     --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 220 27% 16%;
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 220 27% 20%;
-    --sidebar-ring: 235 100% 65%;
+    --sidebar-ring: 235 85% 55%;
   }
 
   .dark {
