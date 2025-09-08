@@ -97,95 +97,12 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-background/80">
-      {/* Hero Section */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[80vh]">
-          {/* Left Content */}
-          <div className="space-y-8">
-            <div className="space-y-6">
-              <h1 className="text-5xl lg:text-6xl font-bold text-foreground leading-tight">
-                Beyond IVR:
-                <br />
-                <span className="text-transparent bg-gradient-to-r from-primary to-secondary bg-clip-text">
-                  Revoluciona tu atención telefónica
-                </span>
-              </h1>
-              <p className="text-xl text-muted-foreground max-w-lg">
-                Reemplaza tu IVR rígido por una experiencia de IA conversacional 24/7 y dispara la satisfacción de tus clientes
-              </p>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-6">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-primary">+25%</div>
-                <div className="text-sm text-muted-foreground">NPS mejorado</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-primary">-90%</div>
-                <div className="text-sm text-muted-foreground">Tiempo espera</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-primary">24/7</div>
-                <div className="text-sm text-muted-foreground">Disponibilidad</div>
-              </div>
-            </div>
-
-            {/* Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg">
-                <Bot className="mr-2 h-5 w-5" />
-                Habla con nuestra IA
-              </Button>
-              <Button variant="outline" size="lg" className="border-primary/20 text-foreground hover:bg-primary/10">
-                Contáctanos
-              </Button>
-            </div>
-          </div>
-
-          {/* Right Content - Phone Mockup */}
-          <div className="relative flex justify-center">
-            <div className="relative">
-              <div className="w-80 h-[600px] bg-gradient-to-br from-primary/20 to-secondary/20 rounded-[3rem] p-4 backdrop-blur-sm border border-primary/20">
-                <div className="w-full h-full bg-card rounded-[2.5rem] p-6 flex flex-col items-center justify-center space-y-8">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary mb-2">beyond</div>
-                    <div className="text-sm text-muted-foreground">04:21</div>
-                  </div>
-                  
-                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                    <Bot className="w-16 h-16 text-white" />
-                  </div>
-                  
-                  <div className="text-center">
-                    <div className="text-lg font-semibold text-foreground mb-2">Asistente IA</div>
-                    <div className="text-sm text-muted-foreground">Conectando...</div>
-                  </div>
-                  
-                  <div className="flex space-x-4">
-                    <div className="w-16 h-16 rounded-full bg-destructive/20 flex items-center justify-center">
-                      <Phone className="w-6 h-6 text-destructive" />
-                    </div>
-                    <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center">
-                      <Phone className="w-6 h-6 text-white" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Features Section */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-4">
-            Descubre nuestros flujos de trabajo
-          </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
-            Experimenta cómo nuestra IA puede transformar la atención al cliente en diferentes escenarios
+    <div className="min-h-screen bg-background p-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-12 space-y-4">
+          <h1 className="text-4xl font-bold">Demo Workflow Components</h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Componentes reutilizables de gestión de workflows con Supabase realtime
           </p>
         </div>
 
