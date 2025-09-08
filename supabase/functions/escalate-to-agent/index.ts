@@ -16,9 +16,9 @@ serve(async (req) => {
     const { session_id, customer_name, conversation_context, workflow_type } = await req.json();
     const finalWorkflowType = workflow_type || 'customer_support';
     
-    if (!session_id || !customer_name) {
+    if (!session_id) {
       return new Response(
-        JSON.stringify({ error: 'session_id and customer_name are required' }),
+        JSON.stringify({ error: 'session_id is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -28,6 +28,32 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
+
+    // Get customer name - either from parameter or from package recipient
+    let finalCustomerName = customer_name;
+    
+    if (!finalCustomerName && finalWorkflowType === 'package_incident') {
+      // Try to get customer name from package_info in previous steps
+      const { data: workflowData } = await supabase
+        .from('workflows')
+        .select('step_data')
+        .eq('session_id', session_id)
+        .eq('workflow_type', finalWorkflowType)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (workflowData?.step_data?.package_info?.recipient) {
+        finalCustomerName = workflowData.step_data.package_info.recipient;
+      }
+    }
+
+    if (!finalCustomerName) {
+      return new Response(
+        JSON.stringify({ error: 'customer_name is required and could not be determined from workflow data' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Mock agent assignment based on workflow type
     let agentData;
@@ -45,7 +71,7 @@ serve(async (req) => {
 
       escalationContext = {
         customer_info: {
-          name: customer_name,
+          name: finalCustomerName,
           issue_type: "package_incident",
           specific_concern: "Paquete recibido con daños"
         },
@@ -76,7 +102,7 @@ serve(async (req) => {
 
       escalationContext = {
         customer_info: {
-          name: customer_name,
+          name: finalCustomerName,
           issue_type: "billing_inquiry",
           specific_concern: "Cine Total subscription charges"
         },
@@ -134,8 +160,8 @@ serve(async (req) => {
         agent_info: agentData,
         escalation_context: escalationContext,
         agent_greeting: finalWorkflowType === 'package_incident' 
-          ? `¡Hola ${customer_name}, soy ${agentData.agent_name} del departamento de Incidencias! He recibido tu caso sobre el paquete dañado. Lamento mucho lo ocurrido. Tengo toda la información aquí y vamos a solucionarlo inmediatamente. ¿Podrías contarme exactamente qué daños observaste en el paquete?`
-          : `¡Hola ${customer_name}, soy ${agentData.agent_name}! Gracias por esperar. Mi compañero virtual me acaba de pasar tu caso. Veo que está todo claro: tienes una consulta sobre el cargo del paquete 'Cine Total' y te gustaría conocer si hay alguna promoción disponible antes de darlo de baja, ¿es correcto?`
+          ? `¡Hola ${finalCustomerName}, soy ${agentData.agent_name} del departamento de Incidencias! He recibido tu caso sobre el paquete dañado. Lamento mucho lo ocurrido. Tengo toda la información aquí y vamos a solucionarlo inmediatamente. ¿Podrías contarme exactamente qué daños observaste en el paquete?`
+          : `¡Hola ${finalCustomerName}, soy ${agentData.agent_name}! Gracias por esperar. Mi compañero virtual me acaba de pasar tu caso. Veo que está todo claro: tienes una consulta sobre el cargo del paquete 'Cine Total' y te gustaría conocer si hay alguna promoción disponible antes de darlo de baja, ¿es correcto?`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
