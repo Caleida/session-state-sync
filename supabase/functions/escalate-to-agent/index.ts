@@ -13,7 +13,8 @@ serve(async (req) => {
   }
 
   try {
-    const { session_id, customer_name, conversation_context } = await req.json();
+    const { session_id, customer_name, conversation_context, workflow_type } = await req.json();
+    const finalWorkflowType = workflow_type || 'customer_support';
     
     if (!session_id || !customer_name) {
       return new Response(
@@ -28,37 +29,72 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Mock agent assignment
-    const agentData = {
-      agent_id: "AGENT_MARIA_001",
-      agent_name: "María",
-      department: "Facturación y Promociones",
-      specialization: "Ofertas y Retención",
-      estimated_wait_time: "5-10 segundos",
-      assigned_at: new Date().toISOString()
-    };
+    // Mock agent assignment based on workflow type
+    let agentData;
+    let escalationContext;
+    
+    if (finalWorkflowType === 'package_incident') {
+      agentData = {
+        agent_id: "AGENT_LAURA_002",
+        agent_name: "Laura Rodríguez",
+        department: "Incidencias y Compensaciones",
+        specialization: "Paquetes dañados y Compensaciones",
+        estimated_wait_time: "1-2 minutos",
+        assigned_at: new Date().toISOString()
+      };
 
-    // Create comprehensive context for agent
-    const escalationContext = {
-      customer_info: {
-        name: customer_name,
-        issue_type: "billing_inquiry",
-        specific_concern: "Cine Total subscription charges"
-      },
-      conversation_summary: {
-        issue_identified: "Customer noticed unexpected charge increase",
-        root_cause: "Cine Total subscription activated on January 5th",
-        customer_preference: "Wants to explore promotional options before canceling",
-        resolution_attempted: "Explained charges, offered cancellation",
-        next_action: "Customer requested to speak with agent for promotional offers"
-      },
-      agent_notes: [
-        "Customer is aware of Cine Total subscription causing increase",
-        "Open to promotional offers to maintain service at lower cost",
-        "Gold customer status - eligible for special promotions",
-        "Polite and collaborative customer - retention opportunity"
-      ]
-    };
+      escalationContext = {
+        customer_info: {
+          name: customer_name,
+          issue_type: "package_incident",
+          specific_concern: "Paquete recibido con daños"
+        },
+        conversation_summary: {
+          issue_identified: "Cliente reporta paquete dañado al recibirlo",
+          root_cause: "Daño durante transporte - requiere compensación",
+          customer_preference: "Busca solución rápida - reembolso o reenvío",
+          resolution_attempted: "Escalación automática por criticidad del caso",
+          next_action: "Agente especializado debe procesar compensación"
+        },
+        agent_notes: [
+          "URGENTE: Paquete dañado confirmado - Prioridad alta",
+          "Cliente identificado y paquete localizado en sistema",
+          "Requiere procesamiento inmediato de compensación",
+          "Documentar incidencia para reclamo con transportista",
+          "Cliente cooperativo - oportunidad de retención"
+        ]
+      };
+    } else {
+      agentData = {
+        agent_id: "AGENT_MARIA_001",
+        agent_name: "María",
+        department: "Facturación y Promociones",
+        specialization: "Ofertas y Retención",
+        estimated_wait_time: "5-10 segundos",
+        assigned_at: new Date().toISOString()
+      };
+
+      escalationContext = {
+        customer_info: {
+          name: customer_name,
+          issue_type: "billing_inquiry",
+          specific_concern: "Cine Total subscription charges"
+        },
+        conversation_summary: {
+          issue_identified: "Customer noticed unexpected charge increase",
+          root_cause: "Cine Total subscription activated on January 5th",
+          customer_preference: "Wants to explore promotional options before canceling",
+          resolution_attempted: "Explained charges, offered cancellation",
+          next_action: "Customer requested to speak with agent for promotional offers"
+        },
+        agent_notes: [
+          "Customer is aware of Cine Total subscription causing increase",
+          "Open to promotional offers to maintain service at lower cost",
+          "Gold customer status - eligible for special promotions",
+          "Polite and collaborative customer - retention opportunity"
+        ]
+      };
+    }
 
     // Create agent connection data for workflow
     const agentConnectionData = {
@@ -76,7 +112,7 @@ serve(async (req) => {
       .from('workflows')
       .upsert({
         session_id,
-        workflow_type: 'customer_support',
+        workflow_type: finalWorkflowType,
         current_step: 'agent_connected',
         step_data: agentConnectionData,
         updated_at: new Date().toISOString()
@@ -97,7 +133,9 @@ serve(async (req) => {
         success: true,
         agent_info: agentData,
         escalation_context: escalationContext,
-        agent_greeting: `¡Hola ${customer_name}, soy ${agentData.agent_name}! Gracias por esperar. Mi compañero virtual me acaba de pasar tu caso. Veo que está todo claro: tienes una consulta sobre el cargo del paquete 'Cine Total' y te gustaría conocer si hay alguna promoción disponible antes de darlo de baja, ¿es correcto?`
+        agent_greeting: finalWorkflowType === 'package_incident' 
+          ? `¡Hola ${customer_name}, soy ${agentData.agent_name} del departamento de Incidencias! He recibido tu caso sobre el paquete dañado. Lamento mucho lo ocurrido. Tengo toda la información aquí y vamos a solucionarlo inmediatamente. ¿Podrías contarme exactamente qué daños observaste en el paquete?`
+          : `¡Hola ${customer_name}, soy ${agentData.agent_name}! Gracias por esperar. Mi compañero virtual me acaba de pasar tu caso. Veo que está todo claro: tienes una consulta sobre el cargo del paquete 'Cine Total' y te gustaría conocer si hay alguna promoción disponible antes de darlo de baja, ¿es correcto?`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

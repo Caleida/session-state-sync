@@ -15,6 +15,7 @@ import { CustomerIdentificationDisplay } from './step-data/CustomerIdentificatio
 import { BillingAnalysisDisplay } from './step-data/BillingAnalysisDisplay';
 import { PromotionsDisplay } from './step-data/PromotionsDisplay';
 import { AgentHandoffDisplay } from './step-data/AgentHandoffDisplay';
+import { IncidentAnalysisDisplay } from './step-data/IncidentAnalysisDisplay';
 
 interface StepDataRendererProps {
   stepData: any;
@@ -113,6 +114,10 @@ const hasAgentHandoff = (data: any): boolean => {
   return data && data.agent_connected && data.agent_connected.agent_details;
 };
 
+const hasIncidentAnalysis = (data: any): boolean => {
+  return data && data.incident_analysis && data.incident_analysis.issue_type;
+};
+
 const hasGenericData = (data: any): boolean => {
   return data && typeof data === 'object' && Object.keys(data).length > 0;
 };
@@ -146,6 +151,10 @@ export const StepDataRenderer: React.FC<StepDataRendererProps> = ({
 
   if (hasAgentHandoff(stepData)) {
     return <AgentHandoffDisplay data={stepData} isActive={isActive} />;
+  }
+
+  if (hasIncidentAnalysis(stepData)) {
+    return <IncidentAnalysisDisplay data={stepData} isActive={isActive} />;
   }
 
   // Render based on data structure detection

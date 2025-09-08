@@ -14,27 +14,49 @@ serve(async (req) => {
   try {
     console.log('Package lookup request received');
     
-    const { session_id, tracking_number } = await req.json();
-    const workflow_type = 'delivery_change';
+    const { session_id, tracking_number, workflow_type } = await req.json();
+    const finalWorkflowType = workflow_type || 'delivery_change';
     
-    console.log('Request data:', { session_id, tracking_number, workflow_type });
+    console.log('Request data:', { session_id, tracking_number, workflow_type: finalWorkflowType });
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const mockPackageData = {
-      tracking_number: tracking_number,
-      sender: "Amazon España",
-      recipient: "María García López", 
-      current_status: "En tránsito",
-      estimated_delivery: "2025-08-30",
-      current_delivery_address: "Calle Mayor 45, 3º B, 28013 Madrid",
-      package_type: "Paquete estándar",
-      weight: "2.3 kg",
-      dimensions: "30x25x15 cm",
-      delivery_window: "09:00 - 18:00"
-    };
+    // Different package data based on workflow type
+    let mockPackageData;
+    
+    if (finalWorkflowType === 'package_incident') {
+      mockPackageData = {
+        tracking_number: tracking_number,
+        sender: "Amazon España",
+        recipient: "Alba García López", 
+        current_status: "Dañado - Incidencia reportada",
+        estimated_delivery: "2025-08-30",
+        current_delivery_address: "Calle Serrano 123, 2º A, 28006 Madrid",
+        package_type: "Paquete frágil",
+        weight: "1.8 kg",
+        dimensions: "25x20x12 cm",
+        delivery_window: "09:00 - 18:00",
+        incident_type: "damaged",
+        damage_description: "Paquete recibido con daños visibles en el exterior",
+        incident_date: "2025-08-29",
+        requires_compensation: true
+      };
+    } else {
+      mockPackageData = {
+        tracking_number: tracking_number,
+        sender: "Amazon España",
+        recipient: "María García López", 
+        current_status: "En tránsito",
+        estimated_delivery: "2025-08-30",
+        current_delivery_address: "Calle Mayor 45, 3º B, 28013 Madrid",
+        package_type: "Paquete estándar",
+        weight: "2.3 kg",
+        dimensions: "30x25x15 cm",
+        delivery_window: "09:00 - 18:00"
+      };
+    }
 
     const packageLookupData = {
       package_info: mockPackageData,
@@ -46,7 +68,7 @@ serve(async (req) => {
       .from('workflows')
       .upsert({
         session_id,
-        workflow_type,
+        workflow_type: finalWorkflowType,
         current_step: 'package_lookup',
         step_data: packageLookupData,
         updated_at: new Date().toISOString()
