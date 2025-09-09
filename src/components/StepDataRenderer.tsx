@@ -16,6 +16,9 @@ import { BillingAnalysisDisplay } from './step-data/BillingAnalysisDisplay';
 import { PromotionsDisplay } from './step-data/PromotionsDisplay';
 import { AgentHandoffDisplay } from './step-data/AgentHandoffDisplay';
 import { IncidentAnalysisDisplay } from './step-data/IncidentAnalysisDisplay';
+import { CustomerInfoCollectedDisplay } from './step-data/CustomerInfoCollectedDisplay';
+import { PizzaOrderValidatedDisplay } from './step-data/PizzaOrderValidatedDisplay';
+import { PizzaPricingCalculatedDisplay } from './step-data/PizzaPricingCalculatedDisplay';
 
 interface StepDataRendererProps {
   stepData: any;
@@ -118,6 +121,19 @@ const hasIncidentAnalysis = (data: any): boolean => {
   return data && data.incident_analysis && data.incident_analysis.issue_type;
 };
 
+// New detection functions for pizzeria workflow
+const hasCustomerInfoCollected = (data: any): boolean => {
+  return data && (data.customer || data.delivery_preference) && !hasCustomerIdentification(data);
+};
+
+const hasPizzaOrderValidated = (data: any): boolean => {
+  return data && (data.validated_pizzas || data.validation_errors !== undefined || data.is_valid !== undefined);
+};
+
+const hasPizzaPricingCalculated = (data: any): boolean => {
+  return data && (data.pizzas_total !== undefined || data.delivery_cost !== undefined || data.subtotal !== undefined);
+};
+
 const hasGenericData = (data: any): boolean => {
   return data && typeof data === 'object' && Object.keys(data).length > 0;
 };
@@ -132,7 +148,20 @@ export const StepDataRenderer: React.FC<StepDataRendererProps> = ({
     return null;
   }
 
-  // Customer support displays (check first for priority)
+  // Pizzeria-specific displays (check first for priority)
+  if (hasCustomerInfoCollected(stepData)) {
+    return <CustomerInfoCollectedDisplay data={stepData} isActive={isActive} />;
+  }
+  
+  if (hasPizzaOrderValidated(stepData)) {
+    return <PizzaOrderValidatedDisplay data={stepData} isActive={isActive} />;
+  }
+  
+  if (hasPizzaPricingCalculated(stepData)) {
+    return <PizzaPricingCalculatedDisplay data={stepData} isActive={isActive} />;
+  }
+
+  // Customer support displays
   if (hasCustomerIdentification(stepData)) {
     return <CustomerIdentificationDisplay data={stepData} isActive={isActive} />;
   }
