@@ -127,11 +127,19 @@ const hasCustomerInfoCollected = (data: any): boolean => {
 };
 
 const hasPizzaOrderValidated = (data: any): boolean => {
-  return data && (data.validated_pizzas || data.validation_errors !== undefined || data.is_valid !== undefined);
+  return data && data.order_validated && (
+    data.order_validated.pizzas || 
+    data.order_validated.validation_errors !== undefined || 
+    data.order_validated.validation_success !== undefined
+  );
 };
 
 const hasPizzaPricingCalculated = (data: any): boolean => {
-  return data && (data.pizzas_total !== undefined || data.delivery_cost !== undefined || data.subtotal !== undefined);
+  return data && data.pricing_calculated && (
+    data.pricing_calculated.subtotal !== undefined || 
+    data.pricing_calculated.delivery_fee !== undefined || 
+    data.pricing_calculated.total !== undefined
+  );
 };
 
 const hasGenericData = (data: any): boolean => {
@@ -154,11 +162,11 @@ export const StepDataRenderer: React.FC<StepDataRendererProps> = ({
   }
   
   if (hasPizzaOrderValidated(stepData)) {
-    return <PizzaOrderValidatedDisplay data={stepData} isActive={isActive} />;
+    return <PizzaOrderValidatedDisplay data={stepData.order_validated} isActive={isActive} />;
   }
   
   if (hasPizzaPricingCalculated(stepData)) {
-    return <PizzaPricingCalculatedDisplay data={stepData} isActive={isActive} />;
+    return <PizzaPricingCalculatedDisplay data={stepData.pricing_calculated} isActive={isActive} />;
   }
 
   // Customer support displays
