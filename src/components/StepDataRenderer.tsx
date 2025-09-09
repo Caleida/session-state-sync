@@ -123,7 +123,7 @@ const hasIncidentAnalysis = (data: any): boolean => {
 
 // New detection functions for pizzeria workflow
 const hasCustomerInfoCollected = (data: any): boolean => {
-  return data && (data.customer || data.delivery_preference) && !hasCustomerIdentification(data);
+  return data && data.customer_info_collected && data.customer_info_collected.customer_info;
 };
 
 const hasPizzaOrderValidated = (data: any): boolean => {

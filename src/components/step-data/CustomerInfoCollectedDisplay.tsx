@@ -5,14 +5,17 @@ import { User, Phone, MapPin, UserCheck, Home } from 'lucide-react';
 
 interface CustomerInfoCollectedDisplayProps {
   data: {
-    customer?: {
-      name?: string;
-      phone?: string;
-      address?: string;
-      is_returning?: boolean;
+    customer_info_collected?: {
+      customer_info?: {
+        name?: string;
+        phone?: string;
+        address?: string;
+        is_returning?: boolean;
+      };
+      delivery_type_question?: string;
+      identification_success?: boolean;
+      next_step?: string;
     };
-    delivery_preference?: string;
-    message?: string;
   };
   isActive: boolean;
 }
@@ -21,7 +24,7 @@ export const CustomerInfoCollectedDisplay: React.FC<CustomerInfoCollectedDisplay
   data, 
   isActive 
 }) => {
-  const customer = data.customer || {};
+  const customer = data.customer_info_collected?.customer_info || {};
   
   return (
     <Card className={`transition-all duration-300 ${isActive ? 'ring-2 ring-primary shadow-md' : ''}`}>
@@ -61,23 +64,23 @@ export const CustomerInfoCollectedDisplay: React.FC<CustomerInfoCollectedDisplay
           )}
         </div>
 
-        {/* Delivery Preference */}
-        {data.delivery_preference && (
+        {/* Delivery Type Question */}
+        {data.customer_info_collected?.delivery_type_question && (
           <div className="mt-4 p-3 bg-muted/50 rounded-lg">
             <div className="flex items-center gap-2">
               <Home className="h-4 w-4 text-primary" />
-              <span className="font-medium text-sm">Preferencia de entrega:</span>
+              <span className="font-medium text-sm">Tipo de entrega:</span>
             </div>
-            <Badge variant="outline" className="mt-2">
-              {data.delivery_preference}
-            </Badge>
+            <div className="text-sm mt-2 text-muted-foreground">
+              {data.customer_info_collected.delivery_type_question}
+            </div>
           </div>
         )}
 
-        {/* Message */}
-        {data.message && (
-          <div className="text-xs text-muted-foreground mt-3 p-2 bg-accent/20 rounded">
-            {data.message}
+        {/* Success Status */}
+        {data.customer_info_collected?.identification_success && (
+          <div className="text-xs text-muted-foreground mt-3 p-2 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-800">
+            ✓ Cliente identificado correctamente
           </div>
         )}
       </CardContent>
