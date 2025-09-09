@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { User, Phone, MapPin, UserCheck, Home } from 'lucide-react';
+import { User, Phone, MapPin, UserCheck } from 'lucide-react';
 
 interface CustomerInfoCollectedDisplayProps {
   data: {
@@ -63,19 +63,6 @@ export const CustomerInfoCollectedDisplay: React.FC<CustomerInfoCollectedDisplay
             </div>
           )}
         </div>
-
-        {/* Delivery Type Question */}
-        {data.customer_info_collected?.delivery_type_question && (
-          <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-            <div className="flex items-center gap-2">
-              <Home className="h-4 w-4 text-primary" />
-              <span className="font-medium text-sm">Tipo de entrega:</span>
-            </div>
-            <div className="text-sm mt-2 text-muted-foreground">
-              {data.customer_info_collected.delivery_type_question}
-            </div>
-          </div>
-        )}
 
         {/* Success Status */}
         {data.customer_info_collected?.identification_success && (
