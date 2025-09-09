@@ -53,3 +53,9 @@ verify_jwt = false
 
 [functions.process-incident-routing]
 verify_jwt = false
+
+[functions.validate-pizza-order]
+verify_jwt = false
+
+[functions.calculate-pizza-pricing]
+verify_jwt = false

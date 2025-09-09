@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { session_id, phone_number } = await req.json();
+    const { session_id, phone_number, workflow_type = 'customer_support' } = await req.json();
     
     if (!session_id || !phone_number) {
       return new Response(
@@ -28,37 +28,68 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Mock customer data based on phone number
-    const mockCustomerData = {
-      customer_id: "CUST001",
-      name: "Carlos González",
-      phone: phone_number,
-      account_status: "active",
-      customer_since: "2020-03-15",
-      vip_status: "gold",
-      last_payment: "2024-01-15",
-      current_plan: "Premium Plus",
-      identification_method: "phone_number_match"
-    };
+    // Determine workflow-specific customer data
+    let mockCustomerData, customerWorkflowData, currentStep, message;
+    
+    if (workflow_type === 'order_management') {
+      // Pizza order workflow
+      mockCustomerData = {
+        customer_id: "PIZZA_CUST001",
+        name: "María García",
+        phone: phone_number,
+        address: "Calle Mayor 123, Madrid",
+        is_regular_customer: true,
+        preferred_payment: "tarjeta",
+        identification_method: "phone_number_match"
+      };
 
-    // Create customer identification data for workflow
-    const customerIdentificationData = {
-      customer_identified: {
-        customer_info: mockCustomerData,
-        identification_time: new Date().toISOString(),
-        identification_success: true,
-        crm_integration: "360_view_enabled"
-      }
-    };
+      customerWorkflowData = {
+        customer_info_collected: {
+          customer_info: mockCustomerData,
+          delivery_type_question: "¿El pedido es para recoger en tienda o entrega a domicilio?",
+          identification_time: new Date().toISOString(),
+          identification_success: true,
+          next_step: "delivery_type_selection"
+        }
+      };
+
+      currentStep = 'customer_info_collected';
+      message = `Hola ${mockCustomerData.name}, gracias por llamar a Pizzería Bella Napoli. Veo que ya eres cliente nuestro. ¿El pedido es para recoger en tienda o entrega a domicilio?`;
+    } else {
+      // Default customer support workflow
+      mockCustomerData = {
+        customer_id: "CUST001",
+        name: "Carlos González",
+        phone: phone_number,
+        account_status: "active",
+        customer_since: "2020-03-15",
+        vip_status: "gold",
+        last_payment: "2024-01-15",
+        current_plan: "Premium Plus",
+        identification_method: "phone_number_match"
+      };
+
+      customerWorkflowData = {
+        customer_identified: {
+          customer_info: mockCustomerData,
+          identification_time: new Date().toISOString(),
+          identification_success: true,
+          crm_integration: "360_view_enabled"
+        }
+      };
+
+      currentStep = 'customer_identified';
+      message = `Hola ${mockCustomerData.name}, bienvenido al soporte de [Empresa]. Veo por tu número que te llamo por tu nombre.`;
+    }
 
     // Update workflow in Supabase
     const { error } = await supabase
       .from('workflows')
       .upsert({
         session_id,
-        workflow_type: 'customer_support',
-        current_step: 'customer_identified',
-        step_data: customerIdentificationData,
+        workflow_type,
+        current_step: currentStep,
+        step_data: customerWorkflowData,
         updated_at: new Date().toISOString()
       }, {
         onConflict: 'session_id,workflow_type'
@@ -76,7 +107,7 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         customer_info: mockCustomerData,
-        message: `Hola ${mockCustomerData.name}, bienvenido al soporte de [Empresa]. Veo por tu número que te llamo por tu nombre.`
+        message: message
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
