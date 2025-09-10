@@ -32,11 +32,11 @@ serve(async (req) => {
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVvc2ticHFtbHZncndvcW9zbmV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMzNDgzMDgsImV4cCI6MjA2ODkyNDMwOH0.iyK012ElyB_SHOczPRbQcUbon0oV6yYqXs6htmuKv2M'
     );
 
-    // Generate random availability for next 7 days
+    // Generate random availability for next 3 weeks (21 days)
     const availableSlots = [];
     const today = new Date();
     
-    for (let i = 1; i <= 7; i++) {
+    for (let i = 1; i <= 21; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
       
@@ -103,7 +103,7 @@ serve(async (req) => {
     // Return response for ElevenLabs
     const response = {
       success: true,
-      message: `Encontré ${limitedSlots.length} citas disponibles para los próximos días`,
+      message: `Encontré ${limitedSlots.length} citas disponibles en las próximas 3 semanas`,
       available_slots: limitedSlots,
       session_id,
       next_step: 'showing_availability'
